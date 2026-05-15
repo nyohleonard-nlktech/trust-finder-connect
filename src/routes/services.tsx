@@ -1,10 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { z } from "zod";
-import { ShieldCheck, MapPin, Search } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Search } from "lucide-react";
 import { NEIGHBORHOODS_BY_CITY, SERVICE_CATEGORIES } from "@/lib/constants";
+import { fetchVerifiedWorkers } from "@/lib/workers";
+import { WorkerCard } from "@/components/WorkerCard";
 import { Input } from "@/components/ui/input";
 import {
   Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue,
@@ -27,44 +28,14 @@ export const Route = createFileRoute("/services")({
   }),
 });
 
-interface WorkerRow {
-  user_id: string;
-  service_category: string;
-  neighborhood: string;
-  bio: string | null;
-  is_available: boolean;
-  profiles: { full_name: string | null; phone: string } | null;
-}
-
 function ServicesPage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const [q, setQ] = useState(search.q ?? "");
 
   const { data, isLoading } = useQuery({
-    queryKey: ["workers", search],
-    queryFn: async () => {
-      let query = supabase
-        .from("worker_profiles")
-        .select("user_id, service_category, neighborhood, bio, is_available, profiles!inner(full_name, phone)")
-        .eq("is_verified", true)
-        .order("is_available", { ascending: false });
-
-      if (search.category) query = query.eq("service_category", search.category);
-      if (search.neighborhood) query = query.eq("neighborhood", search.neighborhood);
-
-      const { data, error } = await query;
-      if (error) throw error;
-      const rows = (data ?? []) as unknown as WorkerRow[];
-      if (search.q) {
-        const needle = search.q.toLowerCase();
-        return rows.filter((w) =>
-          (w.profiles?.full_name ?? "").toLowerCase().includes(needle) ||
-          w.service_category.toLowerCase().includes(needle)
-        );
-      }
-      return rows;
-    },
+    queryKey: ["workers", "services", search],
+    queryFn: () => fetchVerifiedWorkers(search),
   });
 
   const updateSearch = (patch: Partial<typeof search>) => {
@@ -85,7 +56,7 @@ function ServicesPage() {
             placeholder="Search workers…"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && updateSearch({ q })}
+            onKeyDown={(e) => e.key === "Enter" && updateSearch({ q: q || undefined })}
             className="pl-9 h-11"
           />
         </div>
@@ -103,12 +74,13 @@ function ServicesPage() {
           value={search.neighborhood ?? "all"}
           onValueChange={(v) => updateSearch({ neighborhood: v === "all" ? undefined : v })}
         >
-          <SelectTrigger className="h-11"><SelectValue placeholder="All neighborhoods" /></SelectTrigger>
+          <SelectTrigger className="h-11"><SelectValue placeholder="All locations" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All neighborhoods</SelectItem>
+            <SelectItem value="all">All locations</SelectItem>
             {Object.entries(NEIGHBORHOODS_BY_CITY).map(([city, hoods]) => (
               <SelectGroup key={city}>
                 <SelectLabel>{city}</SelectLabel>
+                <SelectItem value={`city:${city}`}>All {city}</SelectItem>
                 {hoods.map((n) => <SelectItem key={n} value={n}>{n}</SelectItem>)}
               </SelectGroup>
             ))}
@@ -126,41 +98,7 @@ function ServicesPage() {
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {data.map((w) => (
-            <Link
-              key={w.user_id}
-              to="/worker/$id"
-              params={{ id: w.user_id }}
-              className="group rounded-2xl bg-card border border-border p-5 hover:border-primary hover:shadow-[var(--shadow-card)] transition-all"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold">
-                    {(w.profiles?.full_name ?? "?").charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <div className="font-semibold flex items-center gap-1">
-                      {w.profiles?.full_name ?? "Worker"}
-                      <ShieldCheck className="h-4 w-4 text-success" />
-                    </div>
-                    <div className="text-xs text-muted-foreground">{w.service_category}</div>
-                  </div>
-                </div>
-                <span className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${
-                  w.is_available
-                    ? "bg-success/15 text-success"
-                    : "bg-muted text-muted-foreground"
-                }`}>
-                  <span className={`h-1.5 w-1.5 rounded-full ${w.is_available ? "bg-success animate-pulse" : "bg-muted-foreground"}`} />
-                  {w.is_available ? "Live" : "Away"}
-                </span>
-              </div>
-              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-3">
-                <MapPin className="h-3 w-3" /> {w.neighborhood}
-              </div>
-              {w.bio && <p className="text-sm text-muted-foreground mt-3 line-clamp-2">{w.bio}</p>}
-            </Link>
-          ))}
+          {data.map((w) => <WorkerCard key={w.user_id} w={w} />)}
         </div>
       )}
     </div>
