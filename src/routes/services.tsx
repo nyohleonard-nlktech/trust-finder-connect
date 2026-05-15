@@ -4,10 +4,10 @@ import { useState } from "react";
 import { z } from "zod";
 import { ShieldCheck, MapPin, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { NEIGHBORHOODS, SERVICE_CATEGORIES } from "@/lib/constants";
+import { NEIGHBORHOODS_BY_CITY, SERVICE_CATEGORIES } from "@/lib/constants";
 import { Input } from "@/components/ui/input";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 
 const searchSchema = z.object({
@@ -106,7 +106,12 @@ function ServicesPage() {
           <SelectTrigger className="h-11"><SelectValue placeholder="All neighborhoods" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All neighborhoods</SelectItem>
-            {NEIGHBORHOODS.map((n) => <SelectItem key={n} value={n}>{n}</SelectItem>)}
+            {Object.entries(NEIGHBORHOODS_BY_CITY).map(([city, hoods]) => (
+              <SelectGroup key={city}>
+                <SelectLabel>{city}</SelectLabel>
+                {hoods.map((n) => <SelectItem key={n} value={n}>{n}</SelectItem>)}
+              </SelectGroup>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -114,8 +119,10 @@ function ServicesPage() {
       {isLoading ? (
         <div className="text-center py-20 text-muted-foreground">Loading workers…</div>
       ) : !data?.length ? (
-        <div className="text-center py-20 rounded-2xl bg-card border border-dashed border-border">
-          <p className="text-muted-foreground">No verified workers match your filters yet.</p>
+        <div className="text-center py-20 px-6 rounded-2xl bg-card border border-dashed border-border">
+          <p className="text-muted-foreground">
+            No workers found in this specific neighborhood yet. Try searching in a nearby area!
+          </p>
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
