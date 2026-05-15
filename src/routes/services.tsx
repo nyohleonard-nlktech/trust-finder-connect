@@ -106,7 +106,12 @@ function ServicesPage() {
           <SelectTrigger className="h-11"><SelectValue placeholder="All neighborhoods" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All neighborhoods</SelectItem>
-            {NEIGHBORHOODS.map((n) => <SelectItem key={n} value={n}>{n}</SelectItem>)}
+            {Object.entries(NEIGHBORHOODS_BY_CITY).map(([city, hoods]) => (
+              <SelectGroup key={city}>
+                <SelectLabel>{city}</SelectLabel>
+                {hoods.map((n) => <SelectItem key={n} value={n}>{n}</SelectItem>)}
+              </SelectGroup>
+            ))}
           </SelectContent>
         </Select>
       </div>
