@@ -51,16 +51,41 @@ function HomePage() {
               Plumbers, electricians, mechanics — every TrustFix worker has been
               verified with a National ID. No surprises, no hassle.
             </p>
-            <div className="mt-7 flex flex-wrap gap-3">
-              <Link to="/services">
-                <Button size="lg" className="gap-2">
-                  <Search className="h-4 w-4" /> Find a worker
-                </Button>
-              </Link>
-              <Link to="/signup">
-                <Button size="lg" variant="outline">
-                  Become a worker
-                </Button>
+            <div className="mt-7 rounded-2xl bg-card border border-border p-3 shadow-[var(--shadow-card)] grid sm:grid-cols-[1fr_1fr_auto] gap-2">
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger className="h-12">
+                  <div className="flex items-center gap-2 truncate">
+                    <Search className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <SelectValue placeholder="Service" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  {SERVICE_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={neighborhood} onValueChange={setNeighborhood}>
+                <SelectTrigger className="h-12">
+                  <div className="flex items-center gap-2 truncate">
+                    <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <SelectValue placeholder="Location" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(NEIGHBORHOODS_BY_CITY).map(([city, hoods]) => (
+                    <SelectGroup key={city}>
+                      <SelectLabel>{city}</SelectLabel>
+                      {hoods.map((n) => <SelectItem key={n} value={n}>{n}</SelectItem>)}
+                    </SelectGroup>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button size="lg" className="h-12 gap-2" onClick={runSearch}>
+                <Search className="h-4 w-4" /> Search
+              </Button>
+            </div>
+            <div className="mt-3">
+              <Link to="/signup" className="text-sm text-muted-foreground hover:text-primary underline-offset-4 hover:underline">
+                Are you a worker? Sign up →
               </Link>
             </div>
           </div>
