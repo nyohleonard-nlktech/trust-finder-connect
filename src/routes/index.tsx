@@ -19,6 +19,20 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
+  const navigate = useNavigate();
+  const [category, setCategory] = useState<string>("");
+  const [neighborhood, setNeighborhood] = useState<string>("");
+
+  const runSearch = () => {
+    navigate({
+      to: "/services",
+      search: {
+        category: category || undefined,
+        neighborhood: neighborhood || undefined,
+      },
+    });
+  };
+
   return (
     <div>
       {/* Hero */}
