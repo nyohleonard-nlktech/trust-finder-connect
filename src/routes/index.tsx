@@ -1,7 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { ShieldCheck, Phone, MessageSquare, Search } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { ShieldCheck, Phone, MessageSquare, Search, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { SERVICE_CATEGORIES } from "@/lib/constants";
+import {
+  Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { SERVICE_CATEGORIES, NEIGHBORHOODS_BY_CITY } from "@/lib/constants";
 import logo from "/icons/trustfix-512.png?url";
 
 export const Route = createFileRoute("/")({
