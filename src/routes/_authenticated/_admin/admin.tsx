@@ -36,13 +36,23 @@ function AdminPanel() {
     queryFn: async () => {
       let q = supabase
         .from("worker_profiles")
-        .select("user_id, service_category, neighborhood, bio, is_verified, id_card_path, created_at, profiles!inner(full_name, phone)")
+        .select("user_id, service_category, neighborhood, bio, is_verified, id_card_path, created_at")
         .order("created_at", { ascending: false });
       if (filter === "pending") q = q.eq("is_verified", false);
       if (filter === "verified") q = q.eq("is_verified", true);
-      const { data, error } = await q;
+      const { data: workers, error } = await q;
       if (error) throw error;
-      return (data ?? []) as unknown as WorkerRow[];
+      const ids = (workers ?? []).map((w) => w.user_id);
+      let profilesById: Record<string, { full_name: string | null; phone: string }> = {};
+      if (ids.length) {
+        const { data: profs, error: pErr } = await supabase
+          .from("profiles")
+          .select("id, full_name, phone")
+          .in("id", ids);
+        if (pErr) throw pErr;
+        profilesById = Object.fromEntries((profs ?? []).map((p) => [p.id, { full_name: p.full_name, phone: p.phone }]));
+      }
+      return (workers ?? []).map((w) => ({ ...w, profiles: profilesById[w.user_id] ?? null })) as WorkerRow[];
     },
   });
 
