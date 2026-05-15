@@ -1,11 +1,14 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ShieldCheck, Phone, MessageSquare, Search, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { SERVICE_CATEGORIES, NEIGHBORHOODS_BY_CITY } from "@/lib/constants";
+import { fetchVerifiedWorkers } from "@/lib/workers";
+import { WorkerCard } from "@/components/WorkerCard";
 import logo from "/icons/trustfix-512.png?url";
 
 export const Route = createFileRoute("/")({
@@ -19,26 +22,27 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
-  const navigate = useNavigate();
-  const [category, setCategory] = useState<string>("");
-  const [neighborhood, setNeighborhood] = useState<string>("");
+  const [category, setCategory] = useState<string>("all");
+  const [neighborhood, setNeighborhood] = useState<string>("all");
 
-  const runSearch = () => {
-    navigate({
-      to: "/services",
-      search: {
-        category: category || undefined,
-        neighborhood: neighborhood || undefined,
-      },
-    });
-  };
+  const filters = useMemo(() => ({
+    category: category === "all" ? undefined : category,
+    neighborhood: neighborhood === "all" ? undefined : neighborhood,
+  }), [category, neighborhood]);
+
+  const { data: workers, isLoading } = useQuery({
+    queryKey: ["workers", "home", filters],
+    queryFn: () => fetchVerifiedWorkers(filters),
+  });
+
+  const reset = () => { setCategory("all"); setNeighborhood("all"); };
 
   return (
     <div>
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10" style={{ background: "var(--gradient-warm)" }} />
-        <div className="mx-auto max-w-6xl px-4 py-16 md:py-24 grid md:grid-cols-2 gap-10 items-center">
+        <div className="mx-auto max-w-6xl px-4 py-16 md:py-20 grid md:grid-cols-2 gap-10 items-center">
           <div>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-accent text-accent-foreground px-3 py-1 text-xs font-medium">
               <ShieldCheck className="h-3.5 w-3.5" /> ID-verified workers only
@@ -51,43 +55,9 @@ function HomePage() {
               Plumbers, electricians, mechanics — every TrustFix worker has been
               verified with a National ID. No surprises, no hassle.
             </p>
-            <div className="mt-7 rounded-2xl bg-card border border-border p-3 shadow-[var(--shadow-card)] grid sm:grid-cols-[1fr_1fr_auto] gap-2">
-              <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger className="h-12">
-                  <div className="flex items-center gap-2 truncate">
-                    <Search className="h-4 w-4 text-muted-foreground shrink-0" />
-                    <SelectValue placeholder="Service" />
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  {SERVICE_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Select value={neighborhood} onValueChange={setNeighborhood}>
-                <SelectTrigger className="h-12">
-                  <div className="flex items-center gap-2 truncate">
-                    <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
-                    <SelectValue placeholder="Location" />
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(NEIGHBORHOODS_BY_CITY).map(([city, hoods]) => (
-                    <SelectGroup key={city}>
-                      <SelectLabel>{city}</SelectLabel>
-                      {hoods.map((n) => <SelectItem key={n} value={n}>{n}</SelectItem>)}
-                    </SelectGroup>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button size="lg" className="h-12 gap-2" onClick={runSearch}>
-                <Search className="h-4 w-4" /> Search
-              </Button>
-            </div>
-            <div className="mt-3">
-              <Link to="/signup" className="text-sm text-muted-foreground hover:text-primary underline-offset-4 hover:underline">
-                Are you a worker? Sign up →
-              </Link>
-            </div>
+            <Link to="/signup" className="inline-block mt-6 text-sm text-muted-foreground hover:text-primary underline-offset-4 hover:underline">
+              Are you a worker? Sign up →
+            </Link>
           </div>
           <div className="relative flex justify-center">
             <div
@@ -97,35 +67,77 @@ function HomePage() {
             <img
               src={logo}
               alt="TrustFix"
-              width={360}
-              height={360}
+              width={320}
+              height={320}
               className="rounded-3xl shadow-[var(--shadow-elevated)]"
             />
           </div>
         </div>
       </section>
 
-      {/* Categories */}
-      <section className="mx-auto max-w-6xl px-4 py-16">
-        <div className="flex items-end justify-between mb-8">
+      {/* Search + workers */}
+      <section className="mx-auto max-w-6xl px-4 -mt-8 md:-mt-10">
+        <div className="rounded-2xl bg-card border border-border p-3 shadow-[var(--shadow-card)] grid sm:grid-cols-[1fr_1fr_auto] gap-2">
+          <Select value={category} onValueChange={setCategory}>
+            <SelectTrigger className="h-12">
+              <div className="flex items-center gap-2 truncate">
+                <Search className="h-4 w-4 text-muted-foreground shrink-0" />
+                <SelectValue placeholder="Service" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All services</SelectItem>
+              {SERVICE_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={neighborhood} onValueChange={setNeighborhood}>
+            <SelectTrigger className="h-12">
+              <div className="flex items-center gap-2 truncate">
+                <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+                <SelectValue placeholder="Location" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All locations</SelectItem>
+              {Object.entries(NEIGHBORHOODS_BY_CITY).map(([city, hoods]) => (
+                <SelectGroup key={city}>
+                  <SelectLabel>{city}</SelectLabel>
+                  <SelectItem value={`city:${city}`}>All {city}</SelectItem>
+                  {hoods.map((n) => <SelectItem key={n} value={n}>{n}</SelectItem>)}
+                </SelectGroup>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button size="lg" variant="outline" className="h-12" onClick={reset}>
+            Reset
+          </Button>
+        </div>
+      </section>
+
+      {/* Workers grid */}
+      <section className="mx-auto max-w-6xl px-4 py-12">
+        <div className="flex items-end justify-between mb-6">
           <div>
-            <h2 className="text-3xl font-bold">Pick a service</h2>
-            <p className="text-muted-foreground mt-1">Trusted help for everyday problems.</p>
+            <h2 className="text-2xl md:text-3xl font-bold">Verified workers</h2>
+            <p className="text-muted-foreground mt-1 text-sm">
+              {isLoading ? "Loading…" : `${workers?.length ?? 0} available`}
+            </p>
           </div>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {SERVICE_CATEGORIES.slice(0, 8).map((c) => (
-            <Link
-              key={c}
-              to="/services"
-              search={{ category: c }}
-              className="group rounded-2xl bg-card border border-border p-5 hover:border-primary hover:shadow-[var(--shadow-card)] transition-all"
-            >
-              <div className="text-base font-semibold group-hover:text-primary transition-colors">{c}</div>
-              <div className="text-xs text-muted-foreground mt-1">Browse →</div>
-            </Link>
-          ))}
-        </div>
+
+        {isLoading ? (
+          <div className="text-center py-16 text-muted-foreground">Loading workers…</div>
+        ) : !workers?.length ? (
+          <div className="text-center py-16 px-6 rounded-2xl bg-card border border-dashed border-border">
+            <p className="text-muted-foreground">
+              No workers found in this specific neighborhood yet. Try searching in a nearby area!
+            </p>
+          </div>
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {workers.map((w) => <WorkerCard key={w.user_id} w={w} />)}
+          </div>
+        )}
       </section>
 
       {/* How it works */}
