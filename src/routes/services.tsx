@@ -4,10 +4,10 @@ import { useState } from "react";
 import { z } from "zod";
 import { ShieldCheck, MapPin, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { NEIGHBORHOODS, SERVICE_CATEGORIES } from "@/lib/constants";
+import { NEIGHBORHOODS_BY_CITY, SERVICE_CATEGORIES } from "@/lib/constants";
 import { Input } from "@/components/ui/input";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 
 const searchSchema = z.object({
