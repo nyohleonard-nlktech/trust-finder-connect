@@ -1,27 +1,21 @@
-export const NEIGHBORHOODS = [
-  "Bambili",
-  "Mile 3",
-  "Upstation",
-  "Bonamoussadi",
-  "Akwa",
-  "Bastos",
-  "Bonapriso",
-  "Deido",
-  "Bonanjo",
-  "Makepe",
-  "Nkoldongo",
-  "Mvan",
-] as const;
+export const NEIGHBORHOODS_BY_CITY = {
+  Bamenda: ["Up Station", "Mankon", "Nkwen", "Bambili", "Mile 2", "Mile 3", "Mile 4"],
+  Douala: ["Bonamoussadi", "Akwa", "Bonapriso", "Deido", "Bonanjo", "Makepe"],
+  Yaoundé: ["Bastos", "Nkoldongo", "Mvan"],
+} as const;
+
+export const NEIGHBORHOODS = Object.values(NEIGHBORHOODS_BY_CITY).flat() as readonly string[];
 
 export const SERVICE_CATEGORIES = [
   "Plumber",
   "Electrician",
+  "AC Repair",
+  "Bike Service",
   "Carpenter",
   "Mason",
   "Painter",
   "Mechanic",
   "Cleaner",
-  "AC Technician",
   "Welder",
   "Tiler",
   "Hairdresser",
