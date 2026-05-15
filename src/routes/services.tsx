@@ -119,8 +119,10 @@ function ServicesPage() {
       {isLoading ? (
         <div className="text-center py-20 text-muted-foreground">Loading workers…</div>
       ) : !data?.length ? (
-        <div className="text-center py-20 rounded-2xl bg-card border border-dashed border-border">
-          <p className="text-muted-foreground">No verified workers match your filters yet.</p>
+        <div className="text-center py-20 px-6 rounded-2xl bg-card border border-dashed border-border">
+          <p className="text-muted-foreground">
+            No workers found in this specific neighborhood yet. Try searching in a nearby area!
+          </p>
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
