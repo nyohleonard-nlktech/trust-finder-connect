@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ShieldCheck, ShieldAlert, Eye } from "lucide-react";
+import { ShieldCheck, ShieldAlert, Eye, Phone, MessageSquare, Activity } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,6 +18,7 @@ interface WorkerRow {
   service_category: string;
   neighborhood: string;
   bio: string | null;
+  cni_number: string | null;
   is_verified: boolean;
   id_card_path: string | null;
   created_at: string;
@@ -36,7 +37,7 @@ function AdminPanel() {
     queryFn: async () => {
       let q = supabase
         .from("worker_profiles")
-        .select("user_id, service_category, neighborhood, bio, is_verified, id_card_path, created_at")
+        .select("user_id, service_category, neighborhood, bio, cni_number, is_verified, id_card_path, created_at")
         .order("created_at", { ascending: false });
       if (filter === "pending") q = q.eq("is_verified", false);
       if (filter === "verified") q = q.eq("is_verified", true);
