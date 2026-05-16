@@ -132,7 +132,7 @@ function WorkerPage() {
             className="h-14 gap-2 text-base"
           >
             {data.is_available ? (
-              <a href={`tel:${phoneE164}`}>
+              <a href={`tel:${phoneE164}`} onClick={() => trackLead("call")}>
                 <Phone className="h-5 w-5" /> Call Worker
               </a>
             ) : (
@@ -144,6 +144,7 @@ function WorkerPage() {
               href={`https://wa.me/${phoneDigits}?text=${encodeURIComponent("Hello, I found you on TrustFix and I need your service.")}`}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackLead("whatsapp")}
             >
               <MessageSquare className="h-5 w-5" /> WhatsApp Message
             </a>
