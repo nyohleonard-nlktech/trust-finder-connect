@@ -159,6 +159,7 @@ function AdminPanel() {
               <div><span className="text-muted-foreground">Phone:</span> {selected.profiles?.phone}</div>
               <div><span className="text-muted-foreground">Service:</span> {selected.service_category}</div>
               <div><span className="text-muted-foreground">Neighborhood:</span> {selected.neighborhood}</div>
+              <div><span className="text-muted-foreground">CNI number:</span> {selected.cni_number ?? <span className="text-destructive">Missing</span>}</div>
               {selected.bio && <div><span className="text-muted-foreground">Bio:</span> {selected.bio}</div>}
               <div>
                 <div className="text-muted-foreground mb-2">National ID card</div>
@@ -185,6 +186,92 @@ function AdminPanel() {
           )}
         </DialogContent>
       </Dialog>
+
+      <BusinessActivity />
+    </div>
+  );
+}
+
+interface LeadRow {
+  id: string;
+  worker_id: string;
+  interaction_type: "call" | "whatsapp";
+  created_at: string;
+  worker_name: string | null;
+}
+
+function BusinessActivity() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-leads"],
+    queryFn: async (): Promise<{ rows: LeadRow[]; calls: number; whatsapp: number; today: number }> => {
+      const { data: events, error } = await supabase
+        .from("lead_events")
+        .select("id, worker_id, interaction_type, created_at")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      const ids = Array.from(new Set((events ?? []).map((e) => e.worker_id)));
+      let names: Record<string, string | null> = {};
+      if (ids.length) {
+        const { data: profs } = await supabase.from("profiles").select("id, full_name").in("id", ids);
+        names = Object.fromEntries((profs ?? []).map((p) => [p.id, p.full_name]));
+      }
+      const rows = (events ?? []).map((e) => ({
+        ...e,
+        interaction_type: e.interaction_type as "call" | "whatsapp",
+        worker_name: names[e.worker_id] ?? null,
+      }));
+      const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+      const today = rows.filter((r) => new Date(r.created_at) >= todayStart).length;
+      const calls = rows.filter((r) => r.interaction_type === "call").length;
+      const whatsapp = rows.filter((r) => r.interaction_type === "whatsapp").length;
+      return { rows, calls, whatsapp, today };
+    },
+  });
+
+  return (
+    <div className="mt-12">
+      <div className="flex items-center gap-2 mb-4">
+        <Activity className="h-5 w-5 text-primary" />
+        <h2 className="text-2xl font-bold">Business activity</h2>
+      </div>
+      <div className="grid grid-cols-3 gap-3 mb-4">
+        <StatCard label="Today" value={data?.today ?? 0} loading={isLoading} />
+        <StatCard label="Calls" value={data?.calls ?? 0} loading={isLoading} icon={<Phone className="h-4 w-4" />} />
+        <StatCard label="WhatsApp" value={data?.whatsapp ?? 0} loading={isLoading} icon={<MessageSquare className="h-4 w-4" />} />
+      </div>
+      <div className="rounded-2xl bg-card border border-border overflow-hidden">
+        <div className="px-4 py-3 border-b border-border text-sm font-semibold">Recent leads</div>
+        {isLoading ? (
+          <div className="p-6 text-center text-muted-foreground text-sm">Loading…</div>
+        ) : !data?.rows.length ? (
+          <div className="p-6 text-center text-muted-foreground text-sm">No leads yet.</div>
+        ) : (
+          <ul className="divide-y divide-border">
+            {data.rows.map((r) => (
+              <li key={r.id} className="px-4 py-3 flex items-center gap-3 text-sm">
+                <span className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${
+                  r.interaction_type === "call" ? "bg-primary/10 text-primary" : "bg-success/15 text-success"
+                }`}>
+                  {r.interaction_type === "call" ? <Phone className="h-3 w-3" /> : <MessageSquare className="h-3 w-3" />}
+                  {r.interaction_type === "call" ? "Call" : "WhatsApp"}
+                </span>
+                <span className="flex-1 truncate">{r.worker_name ?? "Worker"}</span>
+                <span className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString()}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function StatCard({ label, value, loading, icon }: { label: string; value: number; loading: boolean; icon?: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl bg-card border border-border p-4">
+      <div className="text-xs text-muted-foreground flex items-center gap-1.5">{icon}{label}</div>
+      <div className="text-2xl font-bold mt-1">{loading ? "…" : value}</div>
     </div>
   );
 }
