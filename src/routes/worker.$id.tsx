@@ -59,6 +59,14 @@ function WorkerPage() {
   const phoneDigits = phoneForLink(data.profiles?.phone ?? "");
   const phoneE164 = `+${phoneDigits}`;
 
+  const trackLead = (type: "call" | "whatsapp") => {
+    void supabase.from("lead_events").insert({
+      worker_id: data.user_id,
+      interaction_type: type,
+      actor_id: user?.id ?? null,
+    });
+  };
+
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
