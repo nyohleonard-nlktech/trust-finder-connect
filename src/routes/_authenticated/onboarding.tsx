@@ -22,6 +22,7 @@ function Onboarding() {
   const navigate = useNavigate();
   const [category, setCategory] = useState("");
   const [neighborhood, setNeighborhood] = useState("");
+  const [cniNumber, setCniNumber] = useState("");
   const [bio, setBio] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -42,12 +43,16 @@ function Onboarding() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    if (!file) {
-      toast.error("Please upload a photo of your National ID card.");
-      return;
-    }
     if (!category || !neighborhood) {
       toast.error("Choose service category and neighborhood.");
+      return;
+    }
+    if (!cniNumber.trim() || cniNumber.trim().length < 4) {
+      toast.error("Your National ID (CNI) number is required.");
+      return;
+    }
+    if (!file) {
+      toast.error("Please upload a photo of your National ID card (CNI).");
       return;
     }
     setSubmitting(true);
@@ -74,6 +79,7 @@ function Onboarding() {
       service_category: category,
       neighborhood,
       bio,
+      cni_number: cniNumber.trim(),
       id_card_path: path,
       is_verified: false,
       is_available: false,
@@ -119,24 +125,34 @@ function Onboarding() {
           </Select>
         </div>
         <div>
+          <Label htmlFor="cni">National ID (CNI) number <span className="text-destructive">*</span></Label>
+          <Input
+            id="cni" required value={cniNumber}
+            onChange={(e) => setCniNumber(e.target.value)}
+            placeholder="e.g. 123456789"
+            maxLength={32}
+            className="h-12 mt-1"
+          />
+        </div>
+        <div>
           <Label htmlFor="bio">Short bio (optional)</Label>
           <Textarea id="bio" maxLength={500} value={bio} onChange={(e) => setBio(e.target.value)}
             placeholder="Years of experience, specialties, etc." className="mt-1" />
         </div>
         <div>
-          <Label>National ID card photo</Label>
+          <Label>National ID card (CNI) photo <span className="text-destructive">*</span></Label>
           <label className="mt-1 flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border p-6 hover:border-primary transition cursor-pointer bg-muted/40">
             <Upload className="h-6 w-6 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">
               {file ? file.name : "Tap to upload (JPG or PNG)"}
             </span>
             <input
-              type="file" accept="image/*" className="hidden"
+              type="file" accept="image/*" className="hidden" required
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             />
           </label>
           <p className="text-xs text-muted-foreground mt-2">
-            Stored privately. Only TrustFix admins will see this.
+            Stored privately. Only TrustFix admins will see this. Required for verification.
           </p>
         </div>
         <Button type="submit" disabled={submitting} size="lg" className="w-full">

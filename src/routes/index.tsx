@@ -47,13 +47,13 @@ function HomePage() {
             <span className="inline-flex items-center gap-1.5 rounded-full bg-accent text-accent-foreground px-3 py-1 text-xs font-medium">
               <ShieldCheck className="h-3.5 w-3.5" /> ID-verified workers only
             </span>
-            <h1 className="mt-5 text-4xl md:text-6xl font-bold leading-[1.05] text-foreground">
-              Trusted hands,<br />
-              <span className="text-primary">a tap away.</span>
+            <h1 className="mt-5 text-4xl md:text-5xl font-bold leading-[1.1] text-foreground">
+              Find Trusted Local Artisans &amp; Workers in{" "}
+              <span className="text-primary">Cameroon</span>
             </h1>
             <p className="mt-5 text-lg text-muted-foreground max-w-md">
-              Plumbers, electricians, mechanics — every TrustFix worker has been
-              verified with a National ID. No surprises, no hassle.
+              Verified plumbers, electricians, mechanics, and technicians in
+              Bamenda, Douala, and Yaoundé. Safe, reliable, and fast.
             </p>
             <Link to="/signup" className="inline-block mt-6 text-sm text-muted-foreground hover:text-primary underline-offset-4 hover:underline">
               Are you a worker? Sign up →

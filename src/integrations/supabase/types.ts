@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      lead_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          id: string
+          interaction_type: string
+          worker_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          interaction_type: string
+          worker_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          interaction_type?: string
+          worker_id?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           body: string
@@ -134,6 +158,7 @@ export type Database = {
       worker_profiles: {
         Row: {
           bio: string | null
+          cni_number: string | null
           created_at: string
           id_card_path: string | null
           is_available: boolean
@@ -147,6 +172,7 @@ export type Database = {
         }
         Insert: {
           bio?: string | null
+          cni_number?: string | null
           created_at?: string
           id_card_path?: string | null
           is_available?: boolean
@@ -160,6 +186,7 @@ export type Database = {
         }
         Update: {
           bio?: string | null
+          cni_number?: string | null
           created_at?: string
           id_card_path?: string | null
           is_available?: boolean
