@@ -132,8 +132,12 @@ function WorkerPage() {
             )}
           </Button>
           <Button asChild variant="outline" size="lg" className="h-14 gap-2 text-base">
-            <a href={`https://wa.me/${phoneDigits}`} target="_blank" rel="noopener noreferrer">
-              <MessageSquare className="h-5 w-5" /> WhatsApp
+            <a
+              href={`https://wa.me/${phoneDigits}?text=${encodeURIComponent("Hello, I found you on TrustFix and I need your service.")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <MessageSquare className="h-5 w-5" /> WhatsApp Message
             </a>
           </Button>
         </div>
