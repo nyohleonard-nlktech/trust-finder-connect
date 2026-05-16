@@ -22,6 +22,7 @@ function Onboarding() {
   const navigate = useNavigate();
   const [category, setCategory] = useState("");
   const [neighborhood, setNeighborhood] = useState("");
+  const [cniNumber, setCniNumber] = useState("");
   const [bio, setBio] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -42,12 +43,16 @@ function Onboarding() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    if (!file) {
-      toast.error("Please upload a photo of your National ID card.");
-      return;
-    }
     if (!category || !neighborhood) {
       toast.error("Choose service category and neighborhood.");
+      return;
+    }
+    if (!cniNumber.trim() || cniNumber.trim().length < 4) {
+      toast.error("Your National ID (CNI) number is required.");
+      return;
+    }
+    if (!file) {
+      toast.error("Please upload a photo of your National ID card (CNI).");
       return;
     }
     setSubmitting(true);
