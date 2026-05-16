@@ -22,22 +22,20 @@ function WorkerPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["worker", id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: worker, error } = await supabase
         .from("worker_profiles")
-        .select("user_id, service_category, neighborhood, bio, is_verified, is_available, profiles!inner(full_name, phone)")
+        .select("user_id, service_category, neighborhood, bio, is_verified, is_available")
         .eq("user_id", id)
         .eq("is_verified", true)
         .maybeSingle();
       if (error) throw error;
-      return data as unknown as {
-        user_id: string;
-        service_category: string;
-        neighborhood: string;
-        bio: string | null;
-        is_verified: boolean;
-        is_available: boolean;
-        profiles: { full_name: string | null; phone: string } | null;
-      } | null;
+      if (!worker) return null;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, phone")
+        .eq("id", worker.user_id)
+        .maybeSingle();
+      return { ...worker, profiles: profile ?? null };
     },
   });
 
