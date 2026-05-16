@@ -125,7 +125,7 @@ function WorkerPage() {
           >
             {data.is_available ? (
               <a href={`tel:${phoneE164}`}>
-                <Phone className="h-5 w-5" /> Call now
+                <Phone className="h-5 w-5" /> Call Worker
               </a>
             ) : (
               <span><Phone className="h-5 w-5 inline mr-2" /> Worker Busy</span>
