@@ -22,22 +22,20 @@ function WorkerPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["worker", id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: worker, error } = await supabase
         .from("worker_profiles")
-        .select("user_id, service_category, neighborhood, bio, is_verified, is_available, profiles!inner(full_name, phone)")
+        .select("user_id, service_category, neighborhood, bio, is_verified, is_available")
         .eq("user_id", id)
         .eq("is_verified", true)
         .maybeSingle();
       if (error) throw error;
-      return data as unknown as {
-        user_id: string;
-        service_category: string;
-        neighborhood: string;
-        bio: string | null;
-        is_verified: boolean;
-        is_available: boolean;
-        profiles: { full_name: string | null; phone: string } | null;
-      } | null;
+      if (!worker) return null;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, phone")
+        .eq("id", worker.user_id)
+        .maybeSingle();
+      return { ...worker, profiles: profile ?? null };
     },
   });
 
@@ -127,15 +125,19 @@ function WorkerPage() {
           >
             {data.is_available ? (
               <a href={`tel:${phoneE164}`}>
-                <Phone className="h-5 w-5" /> Call now
+                <Phone className="h-5 w-5" /> Call Worker
               </a>
             ) : (
               <span><Phone className="h-5 w-5 inline mr-2" /> Worker Busy</span>
             )}
           </Button>
           <Button asChild variant="outline" size="lg" className="h-14 gap-2 text-base">
-            <a href={`https://wa.me/${phoneDigits}`} target="_blank" rel="noopener noreferrer">
-              <MessageSquare className="h-5 w-5" /> WhatsApp
+            <a
+              href={`https://wa.me/${phoneDigits}?text=${encodeURIComponent("Hello, I found you on TrustFix and I need your service.")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <MessageSquare className="h-5 w-5" /> WhatsApp Message
             </a>
           </Button>
         </div>
