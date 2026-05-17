@@ -216,16 +216,7 @@ function WorkerPage() {
       </Dialog>
 
       <div className="rounded-3xl bg-card border border-border p-6 md:p-8 mt-6">
-        <h2 className="text-xl font-bold">Leave a private message</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          The worker will see this in their inbox. {!user && <Link to="/login" className="text-primary underline">Sign in to send.</Link>}
-        </p>
-        <form onSubmit={sendMessage} className="mt-5 space-y-3">
-          <div className="grid sm:grid-cols-2 gap-3">
-            <div>
-              <Label htmlFor="name">Your name</Label>
 
-      <div className="rounded-3xl bg-card border border-border p-6 md:p-8 mt-6">
         <h2 className="text-xl font-bold">Leave a private message</h2>
         <p className="text-sm text-muted-foreground mt-1">
           The worker will see this in their inbox. {!user && <Link to="/login" className="text-primary underline">Sign in to send.</Link>}
