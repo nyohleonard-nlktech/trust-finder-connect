@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ShieldCheck, ShieldAlert, Eye, Phone, MessageSquare, Activity } from "lucide-react";
+import { ShieldCheck, ShieldAlert, Eye, Phone, MessageSquare, Activity, Inbox, ClipboardList } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -188,6 +188,8 @@ function AdminPanel() {
       </Dialog>
 
       <BusinessActivity />
+      <LiveJobFeed />
+      <FeedbackInbox />
     </div>
   );
 }
@@ -275,3 +277,122 @@ function StatCard({ label, value, loading, icon }: { label: string; value: numbe
     </div>
   );
 }
+
+interface JobRequestRow {
+  id: string;
+  worker_id: string;
+  customer_name: string;
+  customer_phone: string;
+  job_description: string;
+  status: string;
+  created_at: string;
+  worker_name: string | null;
+}
+
+function LiveJobFeed() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-job-requests"],
+    queryFn: async (): Promise<JobRequestRow[]> => {
+      const { data: rows, error } = await supabase
+        .from("job_requests")
+        .select("id, worker_id, customer_name, customer_phone, job_description, status, created_at")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      const ids = Array.from(new Set((rows ?? []).map((r) => r.worker_id)));
+      let names: Record<string, string | null> = {};
+      if (ids.length) {
+        const { data: profs } = await supabase.from("profiles").select("id, full_name").in("id", ids);
+        names = Object.fromEntries((profs ?? []).map((p) => [p.id, p.full_name]));
+      }
+      return (rows ?? []).map((r) => ({ ...r, worker_name: names[r.worker_id] ?? null }));
+    },
+  });
+
+  return (
+    <div className="mt-12">
+      <div className="flex items-center gap-2 mb-4">
+        <ClipboardList className="h-5 w-5 text-primary" />
+        <h2 className="text-2xl font-bold">Live job feed / Leads</h2>
+      </div>
+      <div className="rounded-2xl bg-card border border-border overflow-hidden">
+        {isLoading ? (
+          <div className="p-6 text-center text-muted-foreground text-sm">Loading…</div>
+        ) : !data?.length ? (
+          <div className="p-6 text-center text-muted-foreground text-sm">No job requests yet.</div>
+        ) : (
+          <ul className="divide-y divide-border">
+            {data.map((r) => (
+              <li key={r.id} className="px-4 py-3 text-sm">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div className="font-semibold">{r.customer_name} <span className="text-muted-foreground font-normal">→ {r.worker_name ?? "Worker"}</span></div>
+                  <span className="text-xs px-2 py-1 rounded-full bg-warning/15 text-warning capitalize">{r.status}</span>
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  {r.customer_phone} · {new Date(r.created_at).toLocaleString()}
+                </div>
+                <p className="mt-2 text-foreground/90 whitespace-pre-wrap">{r.job_description}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface FeedbackRow {
+  id: string;
+  name: string;
+  contact: string;
+  feedback_type: string;
+  message: string;
+  created_at: string;
+}
+
+function FeedbackInbox() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-feedback"],
+    queryFn: async (): Promise<FeedbackRow[]> => {
+      const { data: rows, error } = await supabase
+        .from("admin_feedback")
+        .select("id, name, contact, feedback_type, message, created_at")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      return rows ?? [];
+    },
+  });
+
+  return (
+    <div className="mt-12">
+      <div className="flex items-center gap-2 mb-4">
+        <Inbox className="h-5 w-5 text-primary" />
+        <h2 className="text-2xl font-bold">Inbox / Feedback</h2>
+      </div>
+      <div className="rounded-2xl bg-card border border-border overflow-hidden">
+        {isLoading ? (
+          <div className="p-6 text-center text-muted-foreground text-sm">Loading…</div>
+        ) : !data?.length ? (
+          <div className="p-6 text-center text-muted-foreground text-sm">No feedback yet.</div>
+        ) : (
+          <ul className="divide-y divide-border">
+            {data.map((r) => (
+              <li key={r.id} className="px-4 py-3 text-sm">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div className="font-semibold">{r.name}</div>
+                  <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">{r.feedback_type}</span>
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  {r.contact} · {new Date(r.created_at).toLocaleString()}
+                </div>
+                <p className="mt-2 text-foreground/90 whitespace-pre-wrap">{r.message}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+

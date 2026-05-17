@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Phone, MessageSquare, ShieldCheck, MapPin, ArrowLeft, Send } from "lucide-react";
+import { MessageSquare, ShieldCheck, MapPin, ArrowLeft, Send, Wrench } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { phoneForLink } from "@/lib/phone";
@@ -9,6 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/worker/$id")({
@@ -57,7 +64,6 @@ function WorkerPage() {
   }
 
   const phoneDigits = phoneForLink(data.profiles?.phone ?? "");
-  const phoneE164 = `+${phoneDigits}`;
 
   const trackLead = (type: "call" | "whatsapp") => {
     void supabase.from("lead_events").insert({
@@ -65,6 +71,42 @@ function WorkerPage() {
       interaction_type: type,
       actor_id: user?.id ?? null,
     });
+  };
+
+  // --- Request Service modal state ---
+  const [requestOpen, setRequestOpen] = useState(false);
+  const [reqName, setReqName] = useState("");
+  const [reqPhone, setReqPhone] = useState("");
+  const [reqDesc, setReqDesc] = useState("");
+  const [submittingReq, setSubmittingReq] = useState(false);
+
+  const submitRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reqName.trim() || !reqPhone.trim() || !reqDesc.trim()) {
+      toast.error("Please fill in all fields.");
+      return;
+    }
+    setSubmittingReq(true);
+    const { error } = await supabase.from("job_requests").insert({
+      worker_id: data.user_id,
+      customer_name: reqName.trim().slice(0, 120),
+      customer_phone: reqPhone.trim().slice(0, 40),
+      job_description: reqDesc.trim().slice(0, 2000),
+      actor_id: user?.id ?? null,
+    });
+    setSubmittingReq(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    trackLead("whatsapp");
+    const waText =
+      `Hello! I found you on TrustFix. My name is ${reqName.trim()}. ` +
+      `I need help with: ${reqDesc.trim()}. ` +
+      `Please reach out to me at ${reqPhone.trim()}.`;
+    setRequestOpen(false);
+    toast.success("Request saved. Opening WhatsApp…");
+    window.open(`https://wa.me/${phoneDigits}?text=${encodeURIComponent(waText)}`, "_blank", "noopener,noreferrer");
   };
 
   const sendMessage = async (e: React.FormEvent) => {
@@ -124,35 +166,57 @@ function WorkerPage() {
 
         {data.bio && <p className="mt-5 text-foreground/90">{data.bio}</p>}
 
-        <div className="grid sm:grid-cols-2 gap-3 mt-6">
+        <div className="mt-6">
           <Button
-            asChild={data.is_available}
+            onClick={() => setRequestOpen(true)}
             disabled={!data.is_available}
             size="lg"
-            className="h-14 gap-2 text-base"
+            className="h-14 w-full gap-2 text-base"
           >
-            {data.is_available ? (
-              <a href={`tel:${phoneE164}`} onClick={() => trackLead("call")}>
-                <Phone className="h-5 w-5" /> Call Worker
-              </a>
-            ) : (
-              <span><Phone className="h-5 w-5 inline mr-2" /> Worker Busy</span>
-            )}
+            <Wrench className="h-5 w-5" />
+            {data.is_available ? "Request Service" : "Worker currently away"}
           </Button>
-          <Button asChild variant="outline" size="lg" className="h-14 gap-2 text-base">
-            <a
-              href={`https://wa.me/${phoneDigits}?text=${encodeURIComponent("Hello, I found you on TrustFix and I need your service.")}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => trackLead("whatsapp")}
-            >
-              <MessageSquare className="h-5 w-5" /> WhatsApp Message
-            </a>
-          </Button>
+          <p className="mt-2 text-xs text-muted-foreground text-center">
+            We'll save your request and connect you to the worker on WhatsApp.
+          </p>
         </div>
       </div>
 
+      <Dialog open={requestOpen} onOpenChange={setRequestOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Request service from {data.profiles?.full_name ?? "this worker"}</DialogTitle>
+            <DialogDescription>
+              Tell us what you need. After you send, we'll open WhatsApp with your request
+              already typed in.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={submitRequest} className="space-y-3">
+            <div>
+              <Label htmlFor="req-name">Your name</Label>
+              <Input id="req-name" value={reqName} onChange={(e) => setReqName(e.target.value)} className="h-11 mt-1" maxLength={120} required />
+            </div>
+            <div>
+              <Label htmlFor="req-phone">Your phone</Label>
+              <Input id="req-phone" value={reqPhone} onChange={(e) => setReqPhone(e.target.value)} className="h-11 mt-1" maxLength={40} placeholder="e.g. 6XX XXX XXX" required />
+            </div>
+            <div>
+              <Label htmlFor="req-desc">What do you need?</Label>
+              <Textarea
+                id="req-desc" value={reqDesc} onChange={(e) => setReqDesc(e.target.value)}
+                className="min-h-28 mt-1" maxLength={2000} required
+                placeholder="Briefly describe the job (location, problem, urgency)…"
+              />
+            </div>
+            <Button type="submit" disabled={submittingReq} size="lg" className="w-full gap-2">
+              <MessageSquare className="h-4 w-4" /> {submittingReq ? "Sending…" : "Send request & open WhatsApp"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       <div className="rounded-3xl bg-card border border-border p-6 md:p-8 mt-6">
+
         <h2 className="text-xl font-bold">Leave a private message</h2>
         <p className="text-sm text-muted-foreground mt-1">
           The worker will see this in their inbox. {!user && <Link to="/login" className="text-primary underline">Sign in to send.</Link>}
