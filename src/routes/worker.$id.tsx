@@ -64,7 +64,6 @@ function WorkerPage() {
   }
 
   const phoneDigits = phoneForLink(data.profiles?.phone ?? "");
-  const phoneE164 = `+${phoneDigits}`;
 
   const trackLead = (type: "call" | "whatsapp") => {
     void supabase.from("lead_events").insert({
@@ -72,6 +71,42 @@ function WorkerPage() {
       interaction_type: type,
       actor_id: user?.id ?? null,
     });
+  };
+
+  // --- Request Service modal state ---
+  const [requestOpen, setRequestOpen] = useState(false);
+  const [reqName, setReqName] = useState("");
+  const [reqPhone, setReqPhone] = useState("");
+  const [reqDesc, setReqDesc] = useState("");
+  const [submittingReq, setSubmittingReq] = useState(false);
+
+  const submitRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reqName.trim() || !reqPhone.trim() || !reqDesc.trim()) {
+      toast.error("Please fill in all fields.");
+      return;
+    }
+    setSubmittingReq(true);
+    const { error } = await supabase.from("job_requests").insert({
+      worker_id: data.user_id,
+      customer_name: reqName.trim().slice(0, 120),
+      customer_phone: reqPhone.trim().slice(0, 40),
+      job_description: reqDesc.trim().slice(0, 2000),
+      actor_id: user?.id ?? null,
+    });
+    setSubmittingReq(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    trackLead("whatsapp");
+    const waText =
+      `Hello! I found you on TrustFix. My name is ${reqName.trim()}. ` +
+      `I need help with: ${reqDesc.trim()}. ` +
+      `Please reach out to me at ${reqPhone.trim()}.`;
+    setRequestOpen(false);
+    toast.success("Request saved. Opening WhatsApp…");
+    window.open(`https://wa.me/${phoneDigits}?text=${encodeURIComponent(waText)}`, "_blank", "noopener,noreferrer");
   };
 
   const sendMessage = async (e: React.FormEvent) => {
