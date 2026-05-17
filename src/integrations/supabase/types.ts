@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_feedback: {
+        Row: {
+          actor_id: string | null
+          contact: string
+          created_at: string
+          feedback_type: string
+          id: string
+          message: string
+          name: string
+        }
+        Insert: {
+          actor_id?: string | null
+          contact: string
+          created_at?: string
+          feedback_type: string
+          id?: string
+          message: string
+          name: string
+        }
+        Update: {
+          actor_id?: string | null
+          contact?: string
+          created_at?: string
+          feedback_type?: string
+          id?: string
+          message?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      job_requests: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          customer_name: string
+          customer_phone: string
+          id: string
+          job_description: string
+          status: string
+          worker_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          customer_name: string
+          customer_phone: string
+          id?: string
+          job_description: string
+          status?: string
+          worker_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          customer_name?: string
+          customer_phone?: string
+          id?: string
+          job_description?: string
+          status?: string
+          worker_id?: string
+        }
+        Relationships: []
+      }
       lead_events: {
         Row: {
           actor_id: string | null
