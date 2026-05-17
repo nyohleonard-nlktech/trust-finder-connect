@@ -11,6 +11,7 @@ import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth";
 import { Header } from "@/components/Header";
 import { Toaster } from "@/components/ui/sonner";
+import { SupportFooter } from "@/components/SupportFooter";
 
 function NotFoundComponent() {
   return (
@@ -104,9 +105,7 @@ function RootComponent() {
           <main className="flex-1">
             <Outlet />
           </main>
-          <footer className="border-t border-border py-6 text-center text-sm text-muted-foreground">
-            <p>© {new Date().getFullYear()} TrustFix · Verified workers across Cameroon</p>
-          </footer>
+          <SupportFooter />
         </div>
         <Toaster />
       </AuthProvider>
