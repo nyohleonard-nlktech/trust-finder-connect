@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ShieldCheck, ShieldAlert, Eye, Phone, MessageSquare, Activity } from "lucide-react";
+import { ShieldCheck, ShieldAlert, Eye, Phone, MessageSquare, Activity, Inbox, ClipboardList } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -188,6 +188,8 @@ function AdminPanel() {
       </Dialog>
 
       <BusinessActivity />
+      <LiveJobFeed />
+      <FeedbackInbox />
     </div>
   );
 }
