@@ -25,3 +25,6 @@ export const SERVICE_CATEGORIES = [
 
 export type Neighborhood = (typeof NEIGHBORHOODS)[number];
 export type ServiceCategory = (typeof SERVICE_CATEGORIES)[number];
+
+/** Admin WhatsApp number (digits only, with country code) for support chat. */
+export const ADMIN_WHATSAPP = "237659498770";
