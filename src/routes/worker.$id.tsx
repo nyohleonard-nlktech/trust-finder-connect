@@ -166,33 +166,64 @@ function WorkerPage() {
 
         {data.bio && <p className="mt-5 text-foreground/90">{data.bio}</p>}
 
-        <div className="grid sm:grid-cols-2 gap-3 mt-6">
+        <div className="mt-6">
           <Button
-            asChild={data.is_available}
+            onClick={() => setRequestOpen(true)}
             disabled={!data.is_available}
             size="lg"
-            className="h-14 gap-2 text-base"
+            className="h-14 w-full gap-2 text-base"
           >
-            {data.is_available ? (
-              <a href={`tel:${phoneE164}`} onClick={() => trackLead("call")}>
-                <Phone className="h-5 w-5" /> Call Worker
-              </a>
-            ) : (
-              <span><Phone className="h-5 w-5 inline mr-2" /> Worker Busy</span>
-            )}
+            <Wrench className="h-5 w-5" />
+            {data.is_available ? "Request Service" : "Worker currently away"}
           </Button>
-          <Button asChild variant="outline" size="lg" className="h-14 gap-2 text-base">
-            <a
-              href={`https://wa.me/${phoneDigits}?text=${encodeURIComponent("Hello, I found you on TrustFix and I need your service.")}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => trackLead("whatsapp")}
-            >
-              <MessageSquare className="h-5 w-5" /> WhatsApp Message
-            </a>
-          </Button>
+          <p className="mt-2 text-xs text-muted-foreground text-center">
+            We'll save your request and connect you to the worker on WhatsApp.
+          </p>
         </div>
       </div>
+
+      <Dialog open={requestOpen} onOpenChange={setRequestOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Request service from {data.profiles?.full_name ?? "this worker"}</DialogTitle>
+            <DialogDescription>
+              Tell us what you need. After you send, we'll open WhatsApp with your request
+              already typed in.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={submitRequest} className="space-y-3">
+            <div>
+              <Label htmlFor="req-name">Your name</Label>
+              <Input id="req-name" value={reqName} onChange={(e) => setReqName(e.target.value)} className="h-11 mt-1" maxLength={120} required />
+            </div>
+            <div>
+              <Label htmlFor="req-phone">Your phone</Label>
+              <Input id="req-phone" value={reqPhone} onChange={(e) => setReqPhone(e.target.value)} className="h-11 mt-1" maxLength={40} placeholder="e.g. 6XX XXX XXX" required />
+            </div>
+            <div>
+              <Label htmlFor="req-desc">What do you need?</Label>
+              <Textarea
+                id="req-desc" value={reqDesc} onChange={(e) => setReqDesc(e.target.value)}
+                className="min-h-28 mt-1" maxLength={2000} required
+                placeholder="Briefly describe the job (location, problem, urgency)…"
+              />
+            </div>
+            <Button type="submit" disabled={submittingReq} size="lg" className="w-full gap-2">
+              <MessageSquare className="h-4 w-4" /> {submittingReq ? "Sending…" : "Send request & open WhatsApp"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <div className="rounded-3xl bg-card border border-border p-6 md:p-8 mt-6">
+        <h2 className="text-xl font-bold">Leave a private message</h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          The worker will see this in their inbox. {!user && <Link to="/login" className="text-primary underline">Sign in to send.</Link>}
+        </p>
+        <form onSubmit={sendMessage} className="mt-5 space-y-3">
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="name">Your name</Label>
 
       <div className="rounded-3xl bg-card border border-border p-6 md:p-8 mt-6">
         <h2 className="text-xl font-bold">Leave a private message</h2>
