@@ -1,5 +1,5 @@
 export const NEIGHBORHOODS_BY_CITY = {
-  Bamenda: ["Up Station", "Mankon", "Nkwen", "Bambili", "Mile 2", "Mile 3", "Mile 4"],
+  Bamenda: ["Up Station", "Mankon", "Nkwen", "Bambili", "Mile 2", "Mile 3", "Mile 4", "Mile 5", "Mile 6"],
   Douala: ["Bonamoussadi", "Akwa", "Bonapriso", "Deido", "Bonanjo", "Makepe"],
   Yaoundé: ["Bastos", "Nkoldongo", "Mvan"],
 } as const;

@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ShieldCheck, ShieldAlert, Inbox, Power } from "lucide-react";
+import { ShieldCheck, ShieldAlert, Inbox, Power, Briefcase } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Switch } from "@/components/ui/switch";
