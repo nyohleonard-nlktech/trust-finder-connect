@@ -128,13 +128,19 @@ function Dashboard() {
         </div>
       )}
 
-      <Tabs defaultValue="inbox" className="mt-8">
+      <Tabs defaultValue="jobs" className="mt-8">
         <TabsList>
+          <TabsTrigger value="jobs" className="gap-2">
+            <Briefcase className="h-4 w-4" /> My Jobs
+          </TabsTrigger>
           <TabsTrigger value="inbox" className="gap-2">
             <Inbox className="h-4 w-4" /> Inbox {unread > 0 && <span className="bg-primary text-primary-foreground text-xs px-1.5 rounded-full">{unread}</span>}
           </TabsTrigger>
           <TabsTrigger value="profile">Profile</TabsTrigger>
         </TabsList>
+        <TabsContent value="jobs" className="mt-4">
+          <MyJobs workerId={user!.id} />
+        </TabsContent>
         <TabsContent value="inbox" className="mt-4">
           {!messages?.length ? (
             <div className="text-center py-16 rounded-2xl bg-card border border-dashed border-border text-muted-foreground">
