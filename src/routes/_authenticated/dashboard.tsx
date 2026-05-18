@@ -188,3 +188,100 @@ function Dashboard() {
     </div>
   );
 }
+
+interface JobRequest {
+  id: string;
+  customer_name: string;
+  customer_phone: string;
+  job_description: string;
+  status: string;
+  created_at: string;
+}
+
+function MyJobs({ workerId }: { workerId: string }) {
+  const qc = useQueryClient();
+  const { data: jobs, refetch } = useQuery({
+    queryKey: ["my-jobs", workerId],
+    queryFn: async (): Promise<JobRequest[]> => {
+      const { data, error } = await supabase
+        .from("job_requests")
+        .select("id, customer_name, customer_phone, job_description, status, created_at")
+        .eq("worker_id", workerId)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  useEffect(() => {
+    const ch = supabase
+      .channel("my-jobs")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "job_requests", filter: `worker_id=eq.${workerId}` },
+        () => refetch(),
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [workerId, refetch]);
+
+  const updateStatus = async (id: string, status: string) => {
+    const { error } = await supabase.from("job_requests").update({ status }).eq("id", id);
+    if (error) toast.error(error.message);
+    else {
+      toast.success(`Job ${status}`);
+      qc.invalidateQueries({ queryKey: ["my-jobs"] });
+    }
+  };
+
+  if (!jobs?.length) {
+    return (
+      <div className="text-center py-16 rounded-2xl bg-card border border-dashed border-border text-muted-foreground">
+        No incoming jobs yet.
+      </div>
+    );
+  }
+
+  const statusStyle = (s: string) =>
+    s === "completed" ? "bg-success/15 text-success"
+    : s === "accepted" ? "bg-primary/10 text-primary"
+    : "bg-warning/15 text-warning";
+
+  return (
+    <ul className="space-y-3">
+      {jobs.map((j) => (
+        <li key={j.id} className="rounded-2xl bg-card border border-border p-4">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="font-semibold">{j.customer_name}</div>
+            <span className={`text-xs px-2 py-1 rounded-full capitalize ${statusStyle(j.status)}`}>{j.status}</span>
+          </div>
+          <a href={`tel:+${j.customer_phone.replace(/\D/g, "")}`} className="text-sm text-primary">
+            {j.customer_phone}
+          </a>
+          <p className="mt-2 text-foreground/90 whitespace-pre-wrap text-sm">{j.job_description}</p>
+          <div className="text-xs text-muted-foreground mt-2">
+            {formatDistanceToNow(new Date(j.created_at), { addSuffix: true })}
+          </div>
+          <div className="flex gap-2 mt-3">
+            {j.status === "pending" && (
+              <button
+                onClick={() => updateStatus(j.id, "accepted")}
+                className="px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90"
+              >
+                Accept Job
+              </button>
+            )}
+            {j.status !== "completed" && (
+              <button
+                onClick={() => updateStatus(j.id, "completed")}
+                className="px-3 py-1.5 rounded-md bg-success text-success-foreground text-sm font-medium hover:opacity-90"
+              >
+                Mark as Completed
+              </button>
+            )}
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
