@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ShieldCheck, ShieldAlert, Eye, Phone, MessageSquare, Activity, Inbox, ClipboardList } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -290,6 +290,7 @@ interface JobRequestRow {
 }
 
 function LiveJobFeed() {
+  const qc = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ["admin-job-requests"],
     queryFn: async (): Promise<JobRequestRow[]> => {
@@ -308,6 +309,18 @@ function LiveJobFeed() {
       return (rows ?? []).map((r) => ({ ...r, worker_name: names[r.worker_id] ?? null }));
     },
   });
+
+  useEffect(() => {
+    const ch = supabase
+      .channel("admin-jobs")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "job_requests" },
+        () => qc.invalidateQueries({ queryKey: ["admin-job-requests"] }),
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [qc]);
 
   return (
     <div className="mt-12">
