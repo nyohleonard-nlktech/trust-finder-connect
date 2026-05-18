@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ShieldCheck, ShieldAlert, Inbox, Power } from "lucide-react";
+import { ShieldCheck, ShieldAlert, Inbox, Power, Briefcase } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Switch } from "@/components/ui/switch";
@@ -128,13 +128,19 @@ function Dashboard() {
         </div>
       )}
 
-      <Tabs defaultValue="inbox" className="mt-8">
+      <Tabs defaultValue="jobs" className="mt-8">
         <TabsList>
+          <TabsTrigger value="jobs" className="gap-2">
+            <Briefcase className="h-4 w-4" /> My Jobs
+          </TabsTrigger>
           <TabsTrigger value="inbox" className="gap-2">
             <Inbox className="h-4 w-4" /> Inbox {unread > 0 && <span className="bg-primary text-primary-foreground text-xs px-1.5 rounded-full">{unread}</span>}
           </TabsTrigger>
           <TabsTrigger value="profile">Profile</TabsTrigger>
         </TabsList>
+        <TabsContent value="jobs" className="mt-4">
+          <MyJobs workerId={user!.id} />
+        </TabsContent>
         <TabsContent value="inbox" className="mt-4">
           {!messages?.length ? (
             <div className="text-center py-16 rounded-2xl bg-card border border-dashed border-border text-muted-foreground">
@@ -180,5 +186,102 @@ function Dashboard() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+interface JobRequest {
+  id: string;
+  customer_name: string;
+  customer_phone: string;
+  job_description: string;
+  status: string;
+  created_at: string;
+}
+
+function MyJobs({ workerId }: { workerId: string }) {
+  const qc = useQueryClient();
+  const { data: jobs, refetch } = useQuery({
+    queryKey: ["my-jobs", workerId],
+    queryFn: async (): Promise<JobRequest[]> => {
+      const { data, error } = await supabase
+        .from("job_requests")
+        .select("id, customer_name, customer_phone, job_description, status, created_at")
+        .eq("worker_id", workerId)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  useEffect(() => {
+    const ch = supabase
+      .channel("my-jobs")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "job_requests", filter: `worker_id=eq.${workerId}` },
+        () => refetch(),
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [workerId, refetch]);
+
+  const updateStatus = async (id: string, status: string) => {
+    const { error } = await supabase.from("job_requests").update({ status }).eq("id", id);
+    if (error) toast.error(error.message);
+    else {
+      toast.success(`Job ${status}`);
+      qc.invalidateQueries({ queryKey: ["my-jobs"] });
+    }
+  };
+
+  if (!jobs?.length) {
+    return (
+      <div className="text-center py-16 rounded-2xl bg-card border border-dashed border-border text-muted-foreground">
+        No incoming jobs yet.
+      </div>
+    );
+  }
+
+  const statusStyle = (s: string) =>
+    s === "completed" ? "bg-success/15 text-success"
+    : s === "accepted" ? "bg-primary/10 text-primary"
+    : "bg-warning/15 text-warning";
+
+  return (
+    <ul className="space-y-3">
+      {jobs.map((j) => (
+        <li key={j.id} className="rounded-2xl bg-card border border-border p-4">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="font-semibold">{j.customer_name}</div>
+            <span className={`text-xs px-2 py-1 rounded-full capitalize ${statusStyle(j.status)}`}>{j.status}</span>
+          </div>
+          <a href={`tel:+${j.customer_phone.replace(/\D/g, "")}`} className="text-sm text-primary">
+            {j.customer_phone}
+          </a>
+          <p className="mt-2 text-foreground/90 whitespace-pre-wrap text-sm">{j.job_description}</p>
+          <div className="text-xs text-muted-foreground mt-2">
+            {formatDistanceToNow(new Date(j.created_at), { addSuffix: true })}
+          </div>
+          <div className="flex gap-2 mt-3">
+            {j.status === "pending" && (
+              <button
+                onClick={() => updateStatus(j.id, "accepted")}
+                className="px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90"
+              >
+                Accept Job
+              </button>
+            )}
+            {j.status !== "completed" && (
+              <button
+                onClick={() => updateStatus(j.id, "completed")}
+                className="px-3 py-1.5 rounded-md bg-success text-success-foreground text-sm font-medium hover:opacity-90"
+              >
+                Mark as Completed
+              </button>
+            )}
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 }
