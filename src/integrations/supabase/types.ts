@@ -223,10 +223,14 @@ export type Database = {
           bio: string | null
           cni_number: string | null
           created_at: string
+          custom_profession: string | null
           id_card_path: string | null
           is_available: boolean
           is_verified: boolean
           neighborhood: string
+          portfolio_images: string[]
+          portfolio_url: string | null
+          profession_group: string | null
           service_category: string
           updated_at: string
           user_id: string
@@ -237,10 +241,14 @@ export type Database = {
           bio?: string | null
           cni_number?: string | null
           created_at?: string
+          custom_profession?: string | null
           id_card_path?: string | null
           is_available?: boolean
           is_verified?: boolean
           neighborhood: string
+          portfolio_images?: string[]
+          portfolio_url?: string | null
+          profession_group?: string | null
           service_category: string
           updated_at?: string
           user_id: string
@@ -251,10 +259,14 @@ export type Database = {
           bio?: string | null
           cni_number?: string | null
           created_at?: string
+          custom_profession?: string | null
           id_card_path?: string | null
           is_available?: boolean
           is_verified?: boolean
           neighborhood?: string
+          portfolio_images?: string[]
+          portfolio_url?: string | null
+          profession_group?: string | null
           service_category?: string
           updated_at?: string
           user_id?: string
