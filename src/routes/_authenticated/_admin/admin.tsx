@@ -189,6 +189,7 @@ function AdminPanel() {
         </DialogContent>
       </Dialog>
 
+      <UsersDirectory />
       <BusinessActivity />
       <LiveJobFeed />
       <FeedbackInbox />
