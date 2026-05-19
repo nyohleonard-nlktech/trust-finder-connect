@@ -412,3 +412,141 @@ function FeedbackInbox() {
   );
 }
 
+
+interface UserDirRow {
+  id: string;
+  full_name: string | null;
+  phone: string;
+  neighborhood: string | null;
+  role: string;
+  profession: string | null;
+}
+
+function UsersDirectory() {
+  const [locationFilter, setLocationFilter] = useState<string>("all");
+  const [professionFilter, setProfessionFilter] = useState<string>("all");
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-users-directory"],
+    queryFn: async (): Promise<UserDirRow[]> => {
+      const { data: profiles, error: pErr } = await supabase
+        .from("profiles")
+        .select("id, full_name, phone, neighborhood")
+        .order("created_at", { ascending: false });
+      if (pErr) throw pErr;
+      const ids = (profiles ?? []).map((p) => p.id);
+      const [{ data: roles }, { data: workers }] = await Promise.all([
+        supabase.from("user_roles").select("user_id, role").in("user_id", ids),
+        supabase.from("worker_profiles").select("user_id, service_category").in("user_id", ids),
+      ]);
+      const rolesByUser: Record<string, string[]> = {};
+      (roles ?? []).forEach((r) => {
+        rolesByUser[r.user_id] = [...(rolesByUser[r.user_id] ?? []), r.role as string];
+      });
+      const profByUser = Object.fromEntries((workers ?? []).map((w) => [w.user_id, w.service_category]));
+      return (profiles ?? []).map((p) => {
+        const userRoles = rolesByUser[p.id] ?? [];
+        const role = userRoles.includes("admin")
+          ? "admin"
+          : userRoles.includes("worker")
+            ? "worker"
+            : userRoles[0] ?? "customer";
+        return {
+          id: p.id,
+          full_name: p.full_name,
+          phone: p.phone,
+          neighborhood: p.neighborhood,
+          role,
+          profession: profByUser[p.id] ?? null,
+        };
+      });
+    },
+  });
+
+  const locations = Array.from(
+    new Set((data ?? []).map((u) => u.neighborhood).filter((x): x is string => !!x)),
+  ).sort();
+  const professions = Array.from(
+    new Set((data ?? []).map((u) => u.profession).filter((x): x is string => !!x)),
+  ).sort();
+
+  const filtered = (data ?? []).filter(
+    (u) =>
+      (locationFilter === "all" || u.neighborhood === locationFilter) &&
+      (professionFilter === "all" || u.profession === professionFilter),
+  );
+
+  return (
+    <div className="mt-12">
+      <div className="flex items-center gap-2 mb-4">
+        <Users className="h-5 w-5 text-primary" />
+        <h2 className="text-2xl font-bold">All users</h2>
+      </div>
+      <div className="flex flex-wrap gap-3 mb-4">
+        <Select value={locationFilter} onValueChange={setLocationFilter}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Filter by location" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All locations</SelectItem>
+            {locations.map((l) => (
+              <SelectItem key={l} value={l}>{l}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={professionFilter} onValueChange={setProfessionFilter}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Filter by profession" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All professions</SelectItem>
+            {professions.map((p) => (
+              <SelectItem key={p} value={p}>{p}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <div className="ml-auto text-sm text-muted-foreground self-center">
+          {filtered.length} {filtered.length === 1 ? "user" : "users"}
+        </div>
+      </div>
+      <div className="rounded-2xl bg-card border border-border overflow-hidden">
+        {isLoading ? (
+          <div className="p-6 text-center text-muted-foreground text-sm">Loading…</div>
+        ) : !filtered.length ? (
+          <div className="p-6 text-center text-muted-foreground text-sm">No users match these filters.</div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Location</TableHead>
+                <TableHead>Profession</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtered.map((u) => (
+                <TableRow key={u.id}>
+                  <TableCell className="font-medium">{u.full_name ?? "—"}</TableCell>
+                  <TableCell>{u.phone}</TableCell>
+                  <TableCell>
+                    <span className={`text-xs px-2 py-1 rounded-full capitalize ${
+                      u.role === "admin"
+                        ? "bg-primary/10 text-primary"
+                        : u.role === "worker"
+                          ? "bg-success/15 text-success"
+                          : "bg-muted text-muted-foreground"
+                    }`}>{u.role}</span>
+                  </TableCell>
+                  <TableCell>{u.neighborhood ?? "—"}</TableCell>
+                  <TableCell>{u.profession ?? "—"}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </div>
+    </div>
+  );
+}
