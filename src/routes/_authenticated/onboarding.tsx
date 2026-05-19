@@ -282,8 +282,3 @@ function Onboarding() {
     </div>
   );
 }
-
-// no-op helper kept to avoid breaking layout
-function SelectionParser({ value: _value }: { value: unknown }) {
-  return null;
-}
