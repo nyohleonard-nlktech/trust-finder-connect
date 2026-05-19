@@ -159,31 +159,15 @@ function Onboarding() {
             <SelectTrigger className="h-12 mt-1"><SelectValue placeholder="Choose a category" /></SelectTrigger>
             <SelectContent>
               {(Object.keys(PROFESSION_GROUPS) as Group[]).map((g) => (
-                <SelectGroup key={g}>
-                  <SelectLabel>{g}</SelectLabel>
-                  {PROFESSION_GROUPS[g].length > 0 ? (
-                    PROFESSION_GROUPS[g].map((s) => (
-                      <SelectItem key={s} value={`${g}::${s}`} onSelect={() => {}}>
-                        {s}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value={`${g}::__group__`}>{g} (specify)</SelectItem>
-                  )}
-                </SelectGroup>
+                <SelectItem key={g} value={g}>{g}</SelectItem>
               ))}
             </SelectContent>
           </Select>
-          {/* hidden helper: parse selection */}
-          <SelectionParser
-            value={professionGroup && (category || customProfession) ? null : null}
-          />
         </div>
 
-        {/* Group + specific selector (alt simpler approach below replaces above grouping) */}
-        {false && subOptions.length > 0 && (
+        {subOptions.length > 0 && (
           <div>
-            <Label>Specific profession</Label>
+            <Label>Specific profession <span className="text-destructive">*</span></Label>
             <Select value={category} onValueChange={setCategory}>
               <SelectTrigger className="h-12 mt-1"><SelectValue placeholder="Pick one" /></SelectTrigger>
               <SelectContent>
