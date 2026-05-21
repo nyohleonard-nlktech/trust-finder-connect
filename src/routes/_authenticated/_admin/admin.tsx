@@ -551,6 +551,7 @@ function UsersDirectory() {
       </div>
     </div>
   );
+}
 
 interface SupportMsg {
   id: string;
