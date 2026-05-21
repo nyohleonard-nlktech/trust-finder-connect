@@ -1,12 +1,46 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ShieldCheck, LogOut, LayoutDashboard, ShieldAlert } from "lucide-react";
+import { ShieldCheck, LogOut, LayoutDashboard, ShieldAlert, LifeBuoy } from "lucide-react";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import logo from "/icons/trustfix-192.png?url";
+
+function useUnreadSupport() {
+  const { user, isAdmin } = useAuth();
+  const qc = useQueryClient();
+  const { data } = useQuery({
+    enabled: !!user && !isAdmin,
+    queryKey: ["support-unread", user?.id],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("support_messages")
+        .select("id", { count: "exact", head: true })
+        .eq("receiver_id", user!.id)
+        .is("read_at", null);
+      return count ?? 0;
+    },
+  });
+  useEffect(() => {
+    if (!user || isAdmin) return;
+    const ch = supabase
+      .channel("support-badge")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "support_messages", filter: `receiver_id=eq.${user.id}` },
+        () => qc.invalidateQueries({ queryKey: ["support-unread", user.id] }),
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [user, isAdmin, qc]);
+  return data ?? 0;
+}
 
 export function Header() {
   const { user, isWorker, isAdmin, signOut } = useAuth();
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const unread = useUnreadSupport();
 
   const navLink = (to: string, label: string) => (
     <Link
