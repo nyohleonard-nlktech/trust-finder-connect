@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ShieldCheck, ShieldAlert, Eye, Phone, MessageSquare, Activity, Inbox, ClipboardList, Users, LifeBuoy, Send, ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
