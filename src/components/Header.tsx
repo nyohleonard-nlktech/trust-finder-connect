@@ -89,6 +89,19 @@ export function Header() {
                   </Button>
                 </Link>
               )}
+              {!isAdmin && (
+                <Link to="/support">
+                  <Button variant="ghost" size="sm" className="gap-1.5 relative">
+                    <LifeBuoy className="h-4 w-4" />
+                    <span className="hidden sm:inline">Support</span>
+                    {unread > 0 && (
+                      <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-semibold flex items-center justify-center">
+                        {unread}
+                      </span>
+                    )}
+                  </Button>
+                </Link>
+              )}
               <Button onClick={() => signOut()} variant="ghost" size="sm" className="gap-1.5">
                 <LogOut className="h-4 w-4" />
                 <span className="hidden sm:inline">Sign out</span>
