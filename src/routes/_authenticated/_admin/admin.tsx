@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ShieldCheck, ShieldAlert, Eye, Phone, MessageSquare, Activity, Inbox, ClipboardList, Users, LifeBuoy, Send, ArrowLeft } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { ShieldCheck, ShieldAlert, Eye, Phone, MessageSquare, Activity, Inbox, ClipboardList, Users, LifeBuoy, Send, ArrowLeft, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -9,8 +10,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
+import { deleteUserAccount } from "@/lib/admin-users.functions";
 
 export const Route = createFileRoute("/_authenticated/_admin/admin")({
   component: AdminPanel,
@@ -425,8 +428,13 @@ interface UserDirRow {
 }
 
 function UsersDirectory() {
+  const qc = useQueryClient();
+  const { isAdmin, user } = useAuth();
+  const deleteFn = useServerFn(deleteUserAccount);
   const [locationFilter, setLocationFilter] = useState<string>("all");
   const [professionFilter, setProfessionFilter] = useState<string>("all");
+  const [toDelete, setToDelete] = useState<UserDirRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-users-directory"],
@@ -478,6 +486,22 @@ function UsersDirectory() {
       (professionFilter === "all" || u.profession === professionFilter),
   );
 
+  const handleConfirmDelete = async () => {
+    if (!toDelete) return;
+    setDeleting(true);
+    try {
+      await deleteFn({ data: { userId: toDelete.id } });
+      toast.success("User deleted");
+      setToDelete(null);
+      qc.invalidateQueries({ queryKey: ["admin-users-directory"] });
+      qc.invalidateQueries({ queryKey: ["admin-workers"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to delete user");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className="mt-12">
       <div className="flex items-center gap-2 mb-4">
@@ -525,6 +549,7 @@ function UsersDirectory() {
                 <TableHead>Role</TableHead>
                 <TableHead>Location</TableHead>
                 <TableHead>Profession</TableHead>
+                {isAdmin && <TableHead className="text-right">Actions</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -543,12 +568,47 @@ function UsersDirectory() {
                   </TableCell>
                   <TableCell>{u.neighborhood ?? "—"}</TableCell>
                   <TableCell>{u.profession ?? "—"}</TableCell>
+                  {isAdmin && (
+                    <TableCell className="text-right">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        disabled={u.id === user?.id}
+                        onClick={() => setToDelete(u)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Delete
+                      </Button>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         )}
       </div>
+
+      <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && !deleting && setToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this user?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove <strong>{toDelete?.full_name ?? toDelete?.phone}</strong>, including their job
+              requests, support messages, profile, and login. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); handleConfirmDelete(); }}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Deleting…" : "Delete user"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
