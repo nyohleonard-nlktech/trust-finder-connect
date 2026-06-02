@@ -297,7 +297,7 @@ function MyJobs({ workerId }: { workerId: string }) {
       {chatJob && chatJob.actor_id && (
         <JobChat
           open={!!chatJob}
-          onOpenChange={(o) => !o && setChatJob(null)}
+          onOpenChange={(o: boolean) => !o && setChatJob(null)}
           jobId={chatJob.id}
           otherUserId={chatJob.actor_id}
           title={`Chat with ${chatJob.customer_name}`}
