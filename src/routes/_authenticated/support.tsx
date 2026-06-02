@@ -20,6 +20,8 @@ interface SupportMsg {
   body: string;
   read_at: string | null;
   created_at: string;
+  is_admin_message: boolean;
+  broadcast_id: string | null;
 }
 
 function SupportInbox() {
