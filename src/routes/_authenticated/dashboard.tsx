@@ -196,16 +196,18 @@ interface JobRequest {
   job_description: string;
   status: string;
   created_at: string;
+  actor_id: string | null;
 }
 
 function MyJobs({ workerId }: { workerId: string }) {
   const qc = useQueryClient();
+  const [chatJob, setChatJob] = useState<JobRequest | null>(null);
   const { data: jobs, refetch } = useQuery({
     queryKey: ["my-jobs", workerId],
     queryFn: async (): Promise<JobRequest[]> => {
       const { data, error } = await supabase
         .from("job_requests")
-        .select("id, customer_name, customer_phone, job_description, status, created_at")
+        .select("id, customer_name, customer_phone, job_description, status, created_at, actor_id")
         .eq("worker_id", workerId)
         .order("created_at", { ascending: false });
       if (error) throw error;
