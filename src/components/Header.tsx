@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ShieldCheck, LogOut, LayoutDashboard, ShieldAlert, LifeBuoy } from "lucide-react";
+import { ShieldCheck, LogOut, LayoutDashboard, ShieldAlert, LifeBuoy, Briefcase } from "lucide-react";
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
