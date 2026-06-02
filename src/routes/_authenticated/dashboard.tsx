@@ -8,6 +8,8 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import { JobChat } from "@/components/JobChat";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
