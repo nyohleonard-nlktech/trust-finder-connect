@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Send, LifeBuoy } from "lucide-react";
+import { Send, LifeBuoy, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,8 @@ interface SupportMsg {
   body: string;
   read_at: string | null;
   created_at: string;
+  is_admin_message: boolean;
+  broadcast_id: string | null;
 }
 
 function SupportInbox() {
@@ -81,17 +83,25 @@ function SupportInbox() {
     e.preventDefault();
     if (!user || !text.trim()) return;
 
-    // Pick an admin recipient
-    const { data: admins, error: aErr } = await supabase
-      .from("user_roles")
-      .select("user_id")
-      .eq("role", "admin")
-      .limit(1);
-    if (aErr || !admins?.length) {
-      toast.error("Support is currently unavailable.");
-      return;
+    // Prefer replying to the admin who last messaged the user (broadcast or otherwise)
+    let receiverId: string | null = null;
+    const lastAdminMsg = [...(messages ?? [])]
+      .reverse()
+      .find((m) => m.receiver_id === user.id && m.is_admin_message);
+    if (lastAdminMsg) {
+      receiverId = lastAdminMsg.sender_id;
+    } else {
+      const { data: admins, error: aErr } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "admin")
+        .limit(1);
+      if (aErr || !admins?.length) {
+        toast.error("Support is currently unavailable.");
+        return;
+      }
+      receiverId = admins[0].user_id;
     }
-    const receiverId = admins[0].user_id;
     const { error } = await supabase.from("support_messages").insert({
       sender_id: user.id,
       receiver_id: receiverId,
@@ -124,15 +134,31 @@ function SupportInbox() {
           ) : (
             messages.map((m) => {
               const mine = m.sender_id === user?.id;
+              const isAdminMsg = !mine && m.is_admin_message;
+              const isBroadcast = !!m.broadcast_id && isAdminMsg;
               return (
                 <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
                   <div
-                    className={`max-w-[75%] rounded-2xl px-4 py-2 ${
+                    className={`max-w-[80%] rounded-2xl px-4 py-2 ${
                       mine
                         ? "bg-primary text-primary-foreground rounded-br-sm"
+                        : isAdminMsg
+                        ? "bg-accent text-accent-foreground border border-primary/30 rounded-bl-sm"
                         : "bg-muted text-foreground rounded-bl-sm"
                     }`}
                   >
+                    {isAdminMsg && (
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold uppercase tracking-wide">
+                          <ShieldCheck className="h-3 w-3" /> Admin
+                        </span>
+                        {isBroadcast && (
+                          <span className="text-[10px] font-semibold uppercase tracking-wide text-primary">
+                            Official Announcement
+                          </span>
+                        )}
+                      </div>
+                    )}
                     <p className="whitespace-pre-wrap text-sm">{m.body}</p>
                     <div className={`text-[10px] mt-1 ${mine ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
                       {formatDistanceToNow(new Date(m.created_at), { addSuffix: true })}
