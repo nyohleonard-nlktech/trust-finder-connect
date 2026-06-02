@@ -134,15 +134,31 @@ function SupportInbox() {
           ) : (
             messages.map((m) => {
               const mine = m.sender_id === user?.id;
+              const isAdminMsg = !mine && m.is_admin_message;
+              const isBroadcast = !!m.broadcast_id && isAdminMsg;
               return (
                 <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
                   <div
-                    className={`max-w-[75%] rounded-2xl px-4 py-2 ${
+                    className={`max-w-[80%] rounded-2xl px-4 py-2 ${
                       mine
                         ? "bg-primary text-primary-foreground rounded-br-sm"
+                        : isAdminMsg
+                        ? "bg-accent text-accent-foreground border border-primary/30 rounded-bl-sm"
                         : "bg-muted text-foreground rounded-bl-sm"
                     }`}
                   >
+                    {isAdminMsg && (
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold uppercase tracking-wide">
+                          <ShieldCheck className="h-3 w-3" /> Admin
+                        </span>
+                        {isBroadcast && (
+                          <span className="text-[10px] font-semibold uppercase tracking-wide text-primary">
+                            Official Announcement
+                          </span>
+                        )}
+                      </div>
+                    )}
                     <p className="whitespace-pre-wrap text-sm">{m.body}</p>
                     <div className={`text-[10px] mt-1 ${mine ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
                       {formatDistanceToNow(new Date(m.created_at), { addSuffix: true })}
