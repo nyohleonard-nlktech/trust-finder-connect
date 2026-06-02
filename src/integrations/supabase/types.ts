@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_broadcasts: {
+        Row: {
+          created_at: string
+          id: string
+          message_content: string
+          recipients_count: number
+          sender_id: string
+          target_audience: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_content: string
+          recipients_count?: number
+          sender_id: string
+          target_audience: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_content?: string
+          recipients_count?: number
+          sender_id?: string
+          target_audience?: string
+        }
+        Relationships: []
+      }
       admin_feedback: {
         Row: {
           actor_id: string | null
@@ -235,29 +262,43 @@ export type Database = {
       support_messages: {
         Row: {
           body: string
+          broadcast_id: string | null
           created_at: string
           id: string
+          is_admin_message: boolean
           read_at: string | null
           receiver_id: string
           sender_id: string
         }
         Insert: {
           body: string
+          broadcast_id?: string | null
           created_at?: string
           id?: string
+          is_admin_message?: boolean
           read_at?: string | null
           receiver_id: string
           sender_id: string
         }
         Update: {
           body?: string
+          broadcast_id?: string | null
           created_at?: string
           id?: string
+          is_admin_message?: boolean
           read_at?: string | null
           receiver_id?: string
           sender_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_broadcast_id_fkey"
+            columns: ["broadcast_id"]
+            isOneToOne: false
+            referencedRelation: "admin_broadcasts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
