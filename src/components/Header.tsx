@@ -81,6 +81,14 @@ export function Header() {
                   </Button>
                 </Link>
               )}
+              {!isWorker && !isAdmin && (
+                <Link to="/my-requests">
+                  <Button variant="ghost" size="sm" className="gap-1.5">
+                    <Briefcase className="h-4 w-4" />
+                    <span className="hidden sm:inline">My Requests</span>
+                  </Button>
+                </Link>
+              )}
               {isAdmin && (
                 <Link to="/admin">
                   <Button variant="ghost" size="sm" className="gap-1.5">
