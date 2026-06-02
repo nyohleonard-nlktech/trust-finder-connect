@@ -195,12 +195,14 @@ function AdminPanel() {
 
       <UsersDirectory />
       <SupportTickets />
+      <Announcements />
       <BusinessActivity />
       <LiveJobFeed />
       <FeedbackInbox />
     </div>
   );
 }
+
 
 interface LeadRow {
   id: string;
