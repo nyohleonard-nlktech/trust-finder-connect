@@ -83,17 +83,25 @@ function SupportInbox() {
     e.preventDefault();
     if (!user || !text.trim()) return;
 
-    // Pick an admin recipient
-    const { data: admins, error: aErr } = await supabase
-      .from("user_roles")
-      .select("user_id")
-      .eq("role", "admin")
-      .limit(1);
-    if (aErr || !admins?.length) {
-      toast.error("Support is currently unavailable.");
-      return;
+    // Prefer replying to the admin who last messaged the user (broadcast or otherwise)
+    let receiverId: string | null = null;
+    const lastAdminMsg = [...(messages ?? [])]
+      .reverse()
+      .find((m) => m.receiver_id === user.id && m.is_admin_message);
+    if (lastAdminMsg) {
+      receiverId = lastAdminMsg.sender_id;
+    } else {
+      const { data: admins, error: aErr } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "admin")
+        .limit(1);
+      if (aErr || !admins?.length) {
+        toast.error("Support is currently unavailable.");
+        return;
+      }
+      receiverId = admins[0].user_id;
     }
-    const receiverId = admins[0].user_id;
     const { error } = await supabase.from("support_messages").insert({
       sender_id: user.id,
       receiver_id: receiverId,
