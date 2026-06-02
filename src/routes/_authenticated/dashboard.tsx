@@ -8,6 +8,8 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import { JobChat } from "@/components/JobChat";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -196,16 +198,18 @@ interface JobRequest {
   job_description: string;
   status: string;
   created_at: string;
+  actor_id: string | null;
 }
 
 function MyJobs({ workerId }: { workerId: string }) {
   const qc = useQueryClient();
+  const [chatJob, setChatJob] = useState<JobRequest | null>(null);
   const { data: jobs, refetch } = useQuery({
     queryKey: ["my-jobs", workerId],
     queryFn: async (): Promise<JobRequest[]> => {
       const { data, error } = await supabase
         .from("job_requests")
-        .select("id, customer_name, customer_phone, job_description, status, created_at")
+        .select("id, customer_name, customer_phone, job_description, status, created_at, actor_id")
         .eq("worker_id", workerId)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -262,7 +266,7 @@ function MyJobs({ workerId }: { workerId: string }) {
           <div className="text-xs text-muted-foreground mt-2">
             {formatDistanceToNow(new Date(j.created_at), { addSuffix: true })}
           </div>
-          <div className="flex gap-2 mt-3">
+          <div className="flex flex-wrap gap-2 mt-3">
             {j.status === "pending" && (
               <button
                 onClick={() => updateStatus(j.id, "accepted")}
@@ -279,9 +283,27 @@ function MyJobs({ workerId }: { workerId: string }) {
                 Mark as Completed
               </button>
             )}
+            {j.status !== "completed" && j.actor_id && (
+              <button
+                onClick={() => setChatJob(j)}
+                className="px-3 py-1.5 rounded-md bg-secondary text-secondary-foreground text-sm font-medium hover:opacity-90"
+              >
+                Message
+              </button>
+            )}
           </div>
         </li>
       ))}
+      {chatJob && chatJob.actor_id && (
+        <JobChat
+          open={!!chatJob}
+          onOpenChange={(o: boolean) => !o && setChatJob(null)}
+          jobId={chatJob.id}
+          otherUserId={chatJob.actor_id}
+          title={`Chat with ${chatJob.customer_name}`}
+        />
+      )}
     </ul>
   );
 }
+

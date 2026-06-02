@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ShieldCheck, LogOut, LayoutDashboard, ShieldAlert, LifeBuoy } from "lucide-react";
+import { ShieldCheck, LogOut, LayoutDashboard, ShieldAlert, LifeBuoy, Briefcase } from "lucide-react";
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
@@ -78,6 +78,14 @@ export function Header() {
                   <Button variant="ghost" size="sm" className="gap-1.5">
                     <LayoutDashboard className="h-4 w-4" />
                     <span className="hidden sm:inline">Dashboard</span>
+                  </Button>
+                </Link>
+              )}
+              {!isWorker && !isAdmin && (
+                <Link to="/my-requests">
+                  <Button variant="ghost" size="sm" className="gap-1.5">
+                    <Briefcase className="h-4 w-4" />
+                    <span className="hidden sm:inline">My Requests</span>
                   </Button>
                 </Link>
               )}
