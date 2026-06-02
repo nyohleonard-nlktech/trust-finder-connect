@@ -873,3 +873,74 @@ function SupportConversation({
   );
 }
 
+
+function Announcements() {
+  const send = useServerFn(sendBroadcast);
+  const [message, setMessage] = useState("");
+  const [target, setTarget] = useState<"all" | "workers" | "customers">("all");
+  const [submitting, setSubmitting] = useState(false);
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!message.trim()) return;
+    setSubmitting(true);
+    try {
+      const res = await send({ data: { message: message.trim(), target } });
+      if (res.recipients === 0) {
+        toast.info("No recipients found for that audience.");
+      } else {
+        toast.success(`Broadcast sent to ${res.recipients} ${res.recipients === 1 ? "user" : "users"}.`);
+        setMessage("");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to send broadcast.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="mt-12">
+      <div className="flex items-center gap-2 mb-4">
+        <Megaphone className="h-5 w-5 text-primary" />
+        <h2 className="text-2xl font-bold">Announcements</h2>
+      </div>
+      <form
+        onSubmit={onSubmit}
+        className="rounded-2xl bg-card border border-border p-4 space-y-4"
+      >
+        <div className="space-y-2">
+          <Label htmlFor="broadcast-target">Audience</Label>
+          <Select value={target} onValueChange={(v) => setTarget(v as typeof target)}>
+            <SelectTrigger id="broadcast-target" className="w-full sm:w-64">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All users</SelectItem>
+              <SelectItem value="workers">Workers only</SelectItem>
+              <SelectItem value="customers">Customers only</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="broadcast-message">Message</Label>
+          <Textarea
+            id="broadcast-message"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Type the announcement to send to the selected audience…"
+            rows={4}
+            maxLength={2000}
+            disabled={submitting}
+          />
+          <div className="text-xs text-muted-foreground text-right">
+            {message.length} / 2000
+          </div>
+        </div>
+        <Button type="submit" disabled={submitting || !message.trim()} className="gap-1.5">
+          <Send className="h-4 w-4" /> {submitting ? "Sending…" : "Send broadcast"}
+        </Button>
+      </form>
+    </div>
+  );
+}
