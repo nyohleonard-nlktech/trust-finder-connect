@@ -264,7 +264,7 @@ function MyJobs({ workerId }: { workerId: string }) {
           <div className="text-xs text-muted-foreground mt-2">
             {formatDistanceToNow(new Date(j.created_at), { addSuffix: true })}
           </div>
-          <div className="flex gap-2 mt-3">
+          <div className="flex flex-wrap gap-2 mt-3">
             {j.status === "pending" && (
               <button
                 onClick={() => updateStatus(j.id, "accepted")}
@@ -281,9 +281,27 @@ function MyJobs({ workerId }: { workerId: string }) {
                 Mark as Completed
               </button>
             )}
+            {j.status !== "completed" && j.actor_id && (
+              <button
+                onClick={() => setChatJob(j)}
+                className="px-3 py-1.5 rounded-md bg-secondary text-secondary-foreground text-sm font-medium hover:opacity-90"
+              >
+                Message
+              </button>
+            )}
           </div>
         </li>
       ))}
+      {chatJob && chatJob.actor_id && (
+        <JobChat
+          open={!!chatJob}
+          onOpenChange={(o) => !o && setChatJob(null)}
+          jobId={chatJob.id}
+          otherUserId={chatJob.actor_id}
+          title={`Chat with ${chatJob.customer_name}`}
+        />
+      )}
     </ul>
   );
 }
+
