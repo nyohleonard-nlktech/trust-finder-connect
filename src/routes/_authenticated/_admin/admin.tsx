@@ -599,15 +599,26 @@ function UsersDirectory() {
                   <TableCell>{u.profession ?? "—"}</TableCell>
                   {isAdmin && (
                     <TableCell className="text-right">
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        disabled={u.id === user?.id}
-                        onClick={() => setToDelete(u)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        Delete
-                      </Button>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={u.id === user?.id}
+                          onClick={() => { setToMessage(u); setMessageBody(""); }}
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                          Message
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          disabled={u.id === user?.id}
+                          onClick={() => setToDelete(u)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Delete
+                        </Button>
+                      </div>
                     </TableCell>
                   )}
                 </TableRow>
