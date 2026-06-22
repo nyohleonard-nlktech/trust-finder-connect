@@ -441,6 +441,29 @@ function UsersDirectory() {
   const [professionFilter, setProfessionFilter] = useState<string>("all");
   const [toDelete, setToDelete] = useState<UserDirRow | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [toMessage, setToMessage] = useState<UserDirRow | null>(null);
+  const [messageBody, setMessageBody] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const handleSendMessage = async () => {
+    if (!toMessage || !user || !messageBody.trim()) return;
+    setSending(true);
+    const { error } = await supabase.from("support_messages").insert({
+      sender_id: user.id,
+      receiver_id: toMessage.id,
+      body: messageBody.trim(),
+      is_admin_message: true,
+    });
+    setSending(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(`Message sent to ${toMessage.full_name ?? toMessage.phone}`);
+    setToMessage(null);
+    setMessageBody("");
+    qc.invalidateQueries({ queryKey: ["admin-support-threads"] });
+  };
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-users-directory"],
@@ -576,15 +599,26 @@ function UsersDirectory() {
                   <TableCell>{u.profession ?? "—"}</TableCell>
                   {isAdmin && (
                     <TableCell className="text-right">
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        disabled={u.id === user?.id}
-                        onClick={() => setToDelete(u)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        Delete
-                      </Button>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={u.id === user?.id}
+                          onClick={() => { setToMessage(u); setMessageBody(""); }}
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                          Message
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          disabled={u.id === user?.id}
+                          onClick={() => setToDelete(u)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Delete
+                        </Button>
+                      </div>
                     </TableCell>
                   )}
                 </TableRow>
@@ -615,6 +649,33 @@ function UsersDirectory() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={!!toMessage} onOpenChange={(o) => !o && !sending && setToMessage(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Message {toMessage?.full_name ?? toMessage?.phone}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-xs text-muted-foreground">
+              Sent as an official admin message. The recipient will see it in their Support Inbox with an unread badge.
+            </p>
+            <Textarea
+              value={messageBody}
+              onChange={(e) => setMessageBody(e.target.value)}
+              placeholder="Type your message…"
+              rows={5}
+              disabled={sending}
+            />
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setToMessage(null)} disabled={sending}>Cancel</Button>
+              <Button onClick={handleSendMessage} disabled={sending || !messageBody.trim()} className="gap-1.5">
+                <Send className="h-4 w-4" />
+                {sending ? "Sending…" : "Send message"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
