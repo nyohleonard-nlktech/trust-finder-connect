@@ -441,6 +441,29 @@ function UsersDirectory() {
   const [professionFilter, setProfessionFilter] = useState<string>("all");
   const [toDelete, setToDelete] = useState<UserDirRow | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [toMessage, setToMessage] = useState<UserDirRow | null>(null);
+  const [messageBody, setMessageBody] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const handleSendMessage = async () => {
+    if (!toMessage || !user || !messageBody.trim()) return;
+    setSending(true);
+    const { error } = await supabase.from("support_messages").insert({
+      sender_id: user.id,
+      receiver_id: toMessage.id,
+      body: messageBody.trim(),
+      is_admin_message: true,
+    });
+    setSending(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(`Message sent to ${toMessage.full_name ?? toMessage.phone}`);
+    setToMessage(null);
+    setMessageBody("");
+    qc.invalidateQueries({ queryKey: ["admin-support-threads"] });
+  };
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-users-directory"],
