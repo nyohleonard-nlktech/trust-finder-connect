@@ -649,6 +649,33 @@ function UsersDirectory() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={!!toMessage} onOpenChange={(o) => !o && !sending && setToMessage(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Message {toMessage?.full_name ?? toMessage?.phone}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-xs text-muted-foreground">
+              Sent as an official admin message. The recipient will see it in their Support Inbox with an unread badge.
+            </p>
+            <Textarea
+              value={messageBody}
+              onChange={(e) => setMessageBody(e.target.value)}
+              placeholder="Type your message…"
+              rows={5}
+              disabled={sending}
+            />
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setToMessage(null)} disabled={sending}>Cancel</Button>
+              <Button onClick={handleSendMessage} disabled={sending || !messageBody.trim()} className="gap-1.5">
+                <Send className="h-4 w-4" />
+                {sending ? "Sending…" : "Send message"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
