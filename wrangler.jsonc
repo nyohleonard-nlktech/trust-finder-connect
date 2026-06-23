@@ -1,9 +1,11 @@
 {
+  "name": "trust-fix",
   "main": "./dist/server/server.js",
+  "compatibility_date": "2026-06-23",
+  "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "directory": "./dist/client",
     "binding": "ASSETS"
   },
-  "compatibility_flags": ["nodejs_compat"],
   "no_bundle": true
 }
