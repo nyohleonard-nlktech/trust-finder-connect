@@ -3,7 +3,16 @@
   "name": "trust-fix",
   "compatibility_date": "2025-01-01",
   "compatibility_flags": ["nodejs_compat"],
+  "main": "./dist/server/index.mjs",
   "assets": {
-    "directory": "./dist"
-  }
+    "directory": "./dist/client",
+    "binding": "ASSETS"
+  },
+  "no_bundle": true,
+  "rules": [
+    {
+      "type": "ESModule",
+      "globs": ["**/*.mjs", "**/*.js"]
+    }
+  ]
 }
