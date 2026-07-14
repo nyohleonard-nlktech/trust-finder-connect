@@ -4,7 +4,7 @@ A premium service marketplace for Cameroon connecting clients with verified loca
 
 ---
 
-## 1. Backend (Lovable Cloud / Supabase)
+## 1. Backend 
 
 **Enable Lovable Cloud first** (provisions Postgres, Auth, Storage).
 
