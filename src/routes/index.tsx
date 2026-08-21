@@ -12,6 +12,7 @@ import {
 import { SERVICE_CATEGORIES, NEIGHBORHOODS_BY_CITY } from "@/lib/constants";
 import { fetchVerifiedWorkers } from "@/lib/workers";
 import { WorkerCard } from "@/components/WorkerCard";
+import { SmartMatch } from "@/components/SmartMatch";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -201,6 +202,9 @@ function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ============== AI SMART MATCH ============== */}
+      <SmartMatch />
 
       {/* ============== SOCIAL PROOF ============== */}
       <section className="py-14">
