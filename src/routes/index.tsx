@@ -203,6 +203,9 @@ function HomePage() {
         </div>
       </section>
 
+      {/* ============== AI SMART MATCH ============== */}
+      <SmartMatch />
+
       {/* ============== SOCIAL PROOF ============== */}
       <section className="py-14">
         <div className="mx-auto max-w-6xl px-4 grid grid-cols-2 md:grid-cols-4 gap-6">
