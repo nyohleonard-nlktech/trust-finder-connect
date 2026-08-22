@@ -394,6 +394,37 @@ function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ============== VISION / EXPANSION ============== */}
+      <section className="py-20 border-t border-white/5">
+        <div className="mx-auto max-w-5xl px-4 text-center">
+          <span className="inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-xs font-semibold text-[#FF9A6B]">
+            <Globe2 className="h-3.5 w-3.5" /> Our Mission
+          </span>
+          <h2 className="mt-6 text-3xl md:text-5xl font-extrabold font-display leading-[1.1]">
+            Built in Cameroon.<br />
+            <span className="text-gradient-orange">Expanding across Central Africa.</span>
+          </h2>
+          <p className="mt-6 text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            TrustFix started in Bamenda with one simple promise: every artisan you find here is a
+            real, ID-verified person. Our goal is to bring that same trust to every city in Central
+            Africa — Cameroon first, then Gabon, Chad, Congo, the Central African Republic and
+            Equatorial Guinea — so that finding a trusted worker is never a gamble again.
+          </p>
+          <div className="mt-10 grid sm:grid-cols-3 gap-4 text-left">
+            {[
+              { title: "Today", desc: "Bamenda, Douala, Yaoundé — verified artisans, direct contact." },
+              { title: "Next", desc: "Every major Cameroonian city, with more trades and local languages." },
+              { title: "The goal", desc: "One trusted network of verified workers across Central Africa." },
+            ].map(({ title, desc }) => (
+              <div key={title} className="glass rounded-2xl p-6">
+                <div className="text-sm font-bold text-[#FF7043] font-display uppercase tracking-wide">{title}</div>
+                <p className="text-sm text-muted-foreground mt-2">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
