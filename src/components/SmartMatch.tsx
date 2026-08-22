@@ -51,6 +51,13 @@ export function SmartMatch() {
         .filter((m): m is { reason: string; worker: WorkerRow } => Boolean(m.worker))
     : [];
 
+  // When the AI finds nothing, still show real, available verified artisans.
+  const fallback: WorkerRow[] = data
+    ? [...data.workers]
+        .sort((a, b) => Number(b.is_available) - Number(a.is_available))
+        .slice(0, 4)
+    : [];
+
   return (
     <section id="smart-match" className="py-16">
       <div className="mx-auto max-w-4xl px-4">
@@ -140,16 +147,40 @@ export function SmartMatch() {
 
           {data && !mutation.isPending && (
             <div className="mt-8">
-              {data.result.summary && (
+              {matched.length > 0 && data.result.summary && (
                 <p className="text-sm text-foreground/90 flex items-start gap-2">
                   <Sparkles className="h-4 w-4 mt-0.5 text-[#FF7043] shrink-0" />
                   {data.result.summary}
                 </p>
               )}
+
               {matched.length === 0 ? (
-                <p className="mt-4 text-sm text-muted-foreground">
-                  No verified artisan matched that request yet — try describing the trade you need, or browse all workers below.
-                </p>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+                  <p className="font-semibold text-foreground flex items-start gap-2">
+                    <Sparkles className="h-4 w-4 mt-1 text-[#FF7043] shrink-0" />
+                    We don&apos;t have a verified artisan for that request yet.
+                  </p>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    TrustFix only lists workers our team has ID-verified, so we would rather tell you
+                    honestly than send you to someone unchecked. We are onboarding new artisans every
+                    week — and you can{" "}
+                    <a href={`https://wa.me/237659498770?text=${encodeURIComponent(`Hello TrustFix, I am looking for: ${prompt}`)}`} target="_blank" rel="noopener noreferrer" className="text-[#FF7043] font-medium underline underline-offset-4">
+                      tell us what you need on WhatsApp
+                    </a>{" "}
+                    so we prioritise that trade in your area.
+                  </p>
+
+                  {fallback.length > 0 && (
+                    <>
+                      <p className="mt-6 text-sm font-semibold text-foreground">
+                        Verified artisans available right now:
+                      </p>
+                      <div className="mt-4 grid sm:grid-cols-2 gap-5">
+                        {fallback.map((w) => <WorkerCard key={w.user_id} w={w} />)}
+                      </div>
+                    </>
+                  )}
+                </div>
               ) : (
                 <div className="mt-5 grid sm:grid-cols-2 gap-5">
                   {matched.map(({ worker, reason }) => (
