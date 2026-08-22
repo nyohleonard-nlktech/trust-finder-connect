@@ -241,9 +241,31 @@ function HomePage() {
             <div className="text-center py-16 text-muted-foreground">Loading workers…</div>
           ) : !workers?.length ? (
             <div className="text-center py-16 px-6 rounded-2xl glass">
-              <p className="text-muted-foreground">
-                No workers found in this specific neighborhood yet. Try searching in a nearby area!
+              <p className="font-semibold text-foreground">
+                We don&apos;t have a verified worker for that choice yet.
               </p>
+              <p className="text-muted-foreground mt-2 max-w-lg mx-auto text-sm">
+                TrustFix lists only ID-verified artisans, and we are onboarding more every week.
+                Try a nearby neighborhood or “All services”, or message us so we prioritise this
+                trade in your area.
+              </p>
+              <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+                <Button
+                  variant="outline"
+                  onClick={() => { setCategory("all"); setNeighborhood("all"); }}
+                  className="h-12 px-6 rounded-xl border-white/15 bg-white/[0.02] hover:bg-white/[0.06]"
+                >
+                  Show all verified workers
+                </Button>
+                <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
+                  <Button
+                    className="h-12 px-6 rounded-xl w-full font-semibold gap-2"
+                    style={{ background: "#22C55E", color: "#06180D" }}
+                  >
+                    <MessageSquare className="h-4 w-4" /> Tell us what you need
+                  </Button>
+                </a>
+              </div>
             </div>
           ) : (
             <>
