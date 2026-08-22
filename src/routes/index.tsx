@@ -3,7 +3,7 @@ import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   ShieldCheck, Phone, MessageSquare, Search, MapPin,
-  Zap, CheckCircle2, ArrowRight, Sparkles, Users, Star, Building2,
+  Zap, CheckCircle2, ArrowRight, Sparkles, Users, Star, Building2, Globe2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
