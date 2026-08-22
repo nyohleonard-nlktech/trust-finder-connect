@@ -51,6 +51,13 @@ export function SmartMatch() {
         .filter((m): m is { reason: string; worker: WorkerRow } => Boolean(m.worker))
     : [];
 
+  // When the AI finds nothing, still show real, available verified artisans.
+  const fallback: WorkerRow[] = data
+    ? [...data.workers]
+        .sort((a, b) => Number(b.is_available) - Number(a.is_available))
+        .slice(0, 4)
+    : [];
+
   return (
     <section id="smart-match" className="py-16">
       <div className="mx-auto max-w-4xl px-4">
