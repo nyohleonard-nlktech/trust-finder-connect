@@ -49,13 +49,12 @@ export const smartMatchWorkers = createServerFn({ method: "POST" })
     const geminiKey = process.env["GEMINI_API_KEY"];
     const lovableKey = process.env["LOVABLE_API_KEY"];
 
-    let response: Response;
-    if (geminiKey) {
-      response = await fetch(
+    const callGemini = () =>
+      fetch(
         "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
         {
           method: "POST",
-          headers: { "content-type": "application/json", "x-goog-api-key": geminiKey },
+          headers: { "content-type": "application/json", "x-goog-api-key": geminiKey! },
           body: JSON.stringify({
             systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
             contents: [{ role: "user", parts: [{ text: userContent }] }],
@@ -63,10 +62,11 @@ export const smartMatchWorkers = createServerFn({ method: "POST" })
           }),
         },
       );
-    } else if (lovableKey) {
-      response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+
+    const callLovable = () =>
+      fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
-        headers: { "content-type": "application/json", "Lovable-API-Key": lovableKey },
+        headers: { "content-type": "application/json", "Lovable-API-Key": lovableKey! },
         body: JSON.stringify({
           model: "google/gemini-3.7-flash",
           messages: [
@@ -75,8 +75,32 @@ export const smartMatchWorkers = createServerFn({ method: "POST" })
           ],
         }),
       });
-    } else {
-      throw new Error("AI is not configured. Add a GEMINI_API_KEY to enable Smart Match.");
+
+    let response: Response | undefined;
+
+    if (geminiKey) {
+      try {
+        response = await callGemini();
+        // Bad/unbound key or an egress block on Google's endpoint: fall back to Lovable AI.
+        if (!response.ok && [400, 401, 403, 404].includes(response.status)) {
+          console.error(
+            `Gemini direct call failed [${response.status}]: ${await response.clone().text()}`,
+          );
+          response = lovableKey ? undefined : response;
+        }
+      } catch (error) {
+        console.error("Gemini direct call threw (network/egress):", error);
+        response = undefined;
+      }
+    }
+
+    if (!response) {
+      if (!lovableKey) {
+        throw new Error(
+          "AI is not configured on the server. Add a valid GEMINI_API_KEY (or enable Lovable AI) and redeploy.",
+        );
+      }
+      response = await callLovable();
     }
 
     if (!response.ok) {
